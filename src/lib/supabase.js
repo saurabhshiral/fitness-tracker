@@ -12,6 +12,7 @@ const KEY_TO_COL = {
   fitness_workout_logs: 'workout_logs',
   fitness_daily_logs:   'daily_logs',
   fitness_custom_foods: 'custom_foods',
+  fitness_settings:     'settings',
 }
 
 /** On login: pull all data from Supabase → localStorage so pages read instantly */
@@ -29,9 +30,13 @@ export async function pullFromSupabase(userId) {
     if (error || !data) return
 
     Object.entries(KEY_TO_COL).forEach(([lsKey, col]) => {
-      if (Array.isArray(data[col]) && data[col].length > 0) {
-        localStorage.setItem(lsKey, JSON.stringify(data[col]))
-      }
+      const v = data[col]
+      // Arrays must be non-empty (never clobber local data with an empty remote
+      // list); settings is a plain object, so accept any non-null object too.
+      const usable = Array.isArray(v)
+        ? v.length > 0
+        : v !== null && typeof v === 'object' && Object.keys(v).length > 0
+      if (usable) localStorage.setItem(lsKey, JSON.stringify(v))
     })
   } catch (e) {
     console.warn('Supabase pull failed (offline?):', e.message)
@@ -42,7 +47,9 @@ export async function pullFromSupabase(userId) {
 export async function pushToSupabase(key, value) {
   if (!supabase) return
   const col = KEY_TO_COL[key]
-  if (!col || !Array.isArray(value)) return
+  if (!col) return
+  // Arrays (logs) and plain objects (settings) both sync; nothing else
+  if (!Array.isArray(value) && (value === null || typeof value !== 'object')) return
 
   try {
     const { data: { user } } = await supabase.auth.getUser()

@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useStorage, today, getWeekNumber, getCurrentPhase, getProgramStartDate, restartProgram } from '../hooks/useStorage'
-import { WORKOUT_PLAN, PROGRAM_START, STEPS_TARGET, CALORIE_TARGETS, STARTING_STATS } from '../data/fitnessPlan'
+import { useSettings } from '../hooks/useSettings'
+import { WORKOUT_PLAN, PROGRAM_START, STARTING_STATS } from '../data/fitnessPlan'
+import { targetsFor, dayTypeFor } from '../lib/coach'
+import WeeklyCheckIn from '../components/WeeklyCheckIn'
 
 function StatCard({ label, value, unit, valueColor = 'text-white', sub, icon }) {
   return (
@@ -29,15 +32,17 @@ export default function Dashboard() {
   const [dailyLogs] = useStorage('fitness_daily_logs', [])
   const [bodyStats] = useStorage('fitness_body_stats', [STARTING_STATS])
   const [workoutLogs] = useStorage('fitness_workout_logs', [])
+  const [settings, setSettings] = useSettings()
 
   const todayLog = dailyLogs.find(l => l.date === currentDate) || {}
   const latestStat = bodyStats[bodyStats.length - 1] || STARTING_STATS
   const startStat = bodyStats[0] || STARTING_STATS
   const weightDelta = (latestStat.weight - startStat.weight).toFixed(1)
 
-  const calTarget = workout
-    ? (dow === 3 ? CALORIE_TARGETS.cardio : CALORIE_TARGETS.workout)
-    : CALORIE_TARGETS.rest
+  // Targets are computed from your current lean mass and goal, not hardcoded
+  const targets = targetsFor(settings, latestStat, dayTypeFor(dow)) || {}
+  const calTarget = targets.calories || 0
+  const proteinTarget = targets.protein || 0
 
   const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
   const hr = new Date().getHours()
@@ -65,12 +70,30 @@ export default function Dashboard() {
   return (
     <div className="page">
       {/* Header */}
-      <div className="mb-5">
-        <p className="text-slate-400 text-sm">
-          {dayNames[dow]}, {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-        </p>
-        <h1 className="text-2xl font-bold text-white">Good {greeting}, Saurabh 👋</h1>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-slate-400 text-sm">
+            {dayNames[dow]}, {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+          </p>
+          <h1 className="text-2xl font-bold text-white">Good {greeting}, Saurabh 👋</h1>
+        </div>
+        <Link
+          to="/settings"
+          className="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-lg hover:border-slate-600 transition-colors"
+          aria-label="Settings"
+        >
+          ⚙️
+        </Link>
       </div>
+
+      <WeeklyCheckIn
+        bodyStats={bodyStats}
+        dailyLogs={dailyLogs}
+        workoutLogs={workoutLogs}
+        settings={settings}
+        setSettings={setSettings}
+        latestStat={latestStat}
+      />
 
       {/* Program complete banner — replaces the phase bar */}
       {programDone ? (
@@ -173,7 +196,7 @@ export default function Dashboard() {
           </span>
           <p className="text-white font-semibold mt-2">Active Recovery</p>
           <p className="text-slate-400 text-sm mt-1">
-            Walk 20-30 min · Target {STEPS_TARGET.toLocaleString()} steps · Sleep 7-8 hrs
+            Walk 20-30 min · Target {settings.stepsTarget.toLocaleString()} steps · Sleep {settings.sleepTarget} hrs
           </p>
         </div>
       )}
@@ -191,7 +214,7 @@ export default function Dashboard() {
         <StatCard
           icon="🥩"
           label="Protein target"
-          value={150}
+          value={proteinTarget}
           unit="g"
           valueColor="text-green-400"
           sub={todayLog.protein ? `Logged ${todayLog.protein}g` : 'Not logged yet'}
@@ -200,8 +223,8 @@ export default function Dashboard() {
           icon="👟"
           label="Steps today"
           value={todayLog.steps ? todayLog.steps.toLocaleString() : '—'}
-          valueColor={todayLog.steps >= STEPS_TARGET ? 'text-green-400' : 'text-white'}
-          sub={`Target: ${STEPS_TARGET.toLocaleString()}`}
+          valueColor={todayLog.steps >= settings.stepsTarget ? 'text-green-400' : 'text-white'}
+          sub={`Target: ${settings.stepsTarget.toLocaleString()}`}
         />
         <StatCard
           icon="⚖️"
@@ -236,9 +259,9 @@ export default function Dashboard() {
         <div className="card">
           <p className="text-slate-400 text-xs mb-2">Today's non-negotiables</p>
           <div className="space-y-1">
-            <p className="text-sm text-slate-300">💧 3.5L water</p>
-            <p className="text-sm text-slate-300">😴 7-8 hrs sleep</p>
-            <p className="text-sm text-slate-300">🥩 150g protein</p>
+            <p className="text-sm text-slate-300">💧 {settings.waterTargetL}L water</p>
+            <p className="text-sm text-slate-300">😴 {settings.sleepTarget} hrs sleep</p>
+            <p className="text-sm text-slate-300">🥩 {proteinTarget}g protein</p>
           </div>
         </div>
       </div>

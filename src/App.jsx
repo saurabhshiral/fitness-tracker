@@ -8,6 +8,7 @@ import WorkoutLog from './pages/WorkoutLog'
 import Progress from './pages/Progress'
 import DailyLog from './pages/DailyLog'
 import PlanRef from './pages/PlanRef'
+import Settings from './pages/Settings'
 
 // Use Supabase auth when credentials are configured, fallback to local password gate
 const Gate = supabase ? AuthGate : PasswordGate
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/progress" element={<Progress />} />
             <Route path="/log"      element={<DailyLog />} />
             <Route path="/plan"     element={<PlanRef />} />
+            <Route path="/settings" element={<Settings />} />
           </Routes>
           <Nav />
         </div>

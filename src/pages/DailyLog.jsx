@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useStorage, today } from '../hooks/useStorage'
-import { CALORIE_TARGETS, MACRO_TARGETS, STEPS_TARGET, WATER_TARGET_L, COMMON_FOODS, WORKOUT_PLAN } from '../data/fitnessPlan'
+import { COMMON_FOODS, WORKOUT_PLAN, STARTING_STATS } from '../data/fitnessPlan'
+import { useSettings } from '../hooks/useSettings'
+import { targetsFor, dayTypeFor } from '../lib/coach'
 
 function Ring({ value, max, color, label, size = 80 }) {
   const r = (size / 2) - 8
@@ -32,12 +34,16 @@ export default function DailyLog() {
   const [currentDate, setCurrentDate] = useState(today())
   const dayLog = dailyLogs.find(l => l.date === currentDate)
 
+  const [settings] = useSettings()
+  const [bodyStats] = useStorage('fitness_body_stats', [STARTING_STATS])
+  const latestStat = bodyStats[bodyStats.length - 1] || STARTING_STATS
+
   // Targets follow the selected date's weekday, not today's
   const dow = new Date(currentDate + 'T00:00:00').getDay()
   const workout = WORKOUT_PLAN[dow]
-  const isCardio = dow === 3
-  const calTarget = workout ? (isCardio ? CALORIE_TARGETS.cardio : CALORIE_TARGETS.workout) : CALORIE_TARGETS.rest
-  const macros = workout ? MACRO_TARGETS.workout : MACRO_TARGETS.rest
+  const targets = targetsFor(settings, latestStat, dayTypeFor(dow)) || { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  const calTarget = targets.calories
+  const macros = targets
 
   const blankForm = { steps: '', water: '', sleep: '', calories: '', protein: '', carbs: '', fat: '' }
   const formFor = log => log
@@ -234,9 +240,9 @@ export default function DailyLog() {
         <p className="text-white font-semibold mb-3">Habits</p>
         <div className="space-y-3">
           {[
-            { key: 'steps', label: '👟 Steps', unit: 'steps', target: STEPS_TARGET, inputMode: 'numeric' },
-            { key: 'water', label: '💧 Water', unit: 'litres', target: WATER_TARGET_L, inputMode: 'decimal', step: '0.5' },
-            { key: 'sleep', label: '😴 Sleep', unit: 'hours', target: 7.5, inputMode: 'decimal', step: '0.5' },
+            { key: 'steps', label: '👟 Steps', unit: 'steps', target: settings.stepsTarget, inputMode: 'numeric' },
+            { key: 'water', label: '💧 Water', unit: 'litres', target: settings.waterTargetL, inputMode: 'decimal', step: '0.5' },
+            { key: 'sleep', label: '😴 Sleep', unit: 'hours', target: settings.sleepTarget, inputMode: 'decimal', step: '0.5' },
           ].map(({ key, label, unit, target, inputMode, step }) => {
             const val = key === 'steps' ? parseInt(form[key]) || 0 : parseFloat(form[key]) || 0
             const pct = Math.min(100, Math.round((val / target) * 100))
