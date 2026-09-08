@@ -64,11 +64,32 @@ export function formatDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+/** Returns the stored program start date if the user has restarted at least
+ *  once, otherwise the hardcoded constant. This way the first program keeps
+ *  its original date in charts even after a restart. */
+export function getProgramStartDate() {
+  try {
+    return localStorage.getItem('fitness_program_start') || null
+  } catch {
+    return null
+  }
+}
+
+/** Call when the user finishes week 12 and wants to run the program again.
+ *  Persists today's date so all week/phase calculations reset to week 1. */
+export function restartProgram() {
+  try {
+    localStorage.setItem('fitness_program_start', today())
+  } catch {}
+  window.location.reload()
+}
+
 export function getWeekNumber(startDate) {
   const start = new Date(startDate + 'T00:00:00')
   const now = new Date()
   const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24))
-  return Math.max(1, Math.min(12, Math.floor(diffDays / 7) + 1))
+  // No upper clamp — callers that need to detect "past 12" can check > 12
+  return Math.max(1, Math.floor(diffDays / 7) + 1)
 }
 
 export function getCurrentPhase(startDate) {

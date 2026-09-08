@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useStorage, today, getWeekNumber, getCurrentPhase } from '../hooks/useStorage'
+import { useStorage, today, getWeekNumber, getCurrentPhase, getProgramStartDate, restartProgram } from '../hooks/useStorage'
 import { WORKOUT_PLAN, PROGRAM_START, STEPS_TARGET, CALORIE_TARGETS, STARTING_STATS } from '../data/fitnessPlan'
 
 function StatCard({ label, value, unit, valueColor = 'text-white', sub, icon }) {
@@ -19,8 +19,12 @@ export default function Dashboard() {
   const dow = new Date().getDay()
   const workout = WORKOUT_PLAN[dow]
   const currentDate = today()
-  const week = getWeekNumber(PROGRAM_START)
-  const phase = getCurrentPhase(PROGRAM_START)
+
+  // Custom start overrides the hardcoded constant when the user has restarted
+  const startDate = getProgramStartDate() || PROGRAM_START
+  const week = getWeekNumber(startDate)
+  const programDone = week > 12
+  const phase = getCurrentPhase(startDate)
 
   const [dailyLogs] = useStorage('fitness_daily_logs', [])
   const [bodyStats] = useStorage('fitness_body_stats', [STARTING_STATS])
@@ -39,8 +43,6 @@ export default function Dashboard() {
   const hr = new Date().getHours()
   const greeting = hr < 12 ? 'morning' : hr < 17 ? 'afternoon' : 'evening'
 
-  // Sessions completed in the current Mon-Sun week. A consecutive-*day* streak
-  // is useless on a 5-day plan — it would reset to zero every weekend.
   const now = new Date()
   const monday = new Date(now)
   monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
@@ -52,6 +54,14 @@ export default function Dashboard() {
   const weekSessions = weekDates.filter(d => workoutLogs.some(l => l.date === d)).length
   const loggedToday = workoutLogs.some(l => l.date === currentDate)
 
+  // Pull summary stats for the program-complete banner
+  const totalSessions = workoutLogs.length
+  const totalVolume = workoutLogs.reduce((a, l) =>
+    a + (l.exercises?.reduce((b, e) =>
+      b + (e.sets?.filter(s => s.done).reduce((c, s) => c + (s.weight || 0) * (s.reps || 0), 0) || 0), 0) || 0), 0)
+  const weightChange = (latestStat.weight - startStat.weight).toFixed(1)
+  const bfChange = ((latestStat.bodyFat || 0) - (startStat.bodyFat || 0)).toFixed(1)
+
   return (
     <div className="page">
       {/* Header */}
@@ -62,23 +72,71 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-white">Good {greeting}, Saurabh 👋</h1>
       </div>
 
-      {/* Phase progress bar */}
-      <div className="card mb-4 flex items-center justify-between gap-4">
-        <div>
-          <p className="text-green-400 text-xs font-semibold tracking-wider">WEEK {week} / 12 · PHASE {phase.phase}</p>
-          <p className="text-white font-semibold">{phase.name}</p>
-          <p className="text-slate-400 text-xs mt-0.5">{phase.weeks} weeks</p>
-        </div>
-        <div className="flex-shrink-0 text-right">
-          <div className="w-20 h-2 bg-slate-700 rounded-full mb-1">
-            <div
-              className="h-full bg-green-400 rounded-full transition-all"
-              style={{ width: `${(week / 12) * 100}%` }}
-            />
+      {/* Program complete banner — replaces the phase bar */}
+      {programDone ? (
+        <div className="card mb-4 border-yellow-500/40 bg-yellow-500/5">
+          <div className="text-center mb-4">
+            <p className="text-5xl mb-3">🏆</p>
+            <p className="text-yellow-400 text-xs font-semibold tracking-wider mb-1">12-WEEK PROGRAM COMPLETE</p>
+            <p className="text-white font-bold text-xl">You did it, Saurabh!</p>
+            <p className="text-slate-400 text-sm mt-1">12 weeks of consistent training finished.</p>
           </div>
-          <p className="text-slate-500 text-xs">{Math.round((week/12)*100)}%</p>
+          <div className="grid grid-cols-4 gap-2 text-center mb-4">
+            <div>
+              <p className="text-slate-400 text-xs">Sessions</p>
+              <p className="text-white font-bold">{totalSessions}</p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-xs">Tonnage</p>
+              <p className="text-white font-bold text-sm">{(totalVolume / 1000).toFixed(0)}<span className="text-xs font-normal text-slate-400">t</span></p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-xs">Weight Δ</p>
+              <p className={`font-bold ${weightChange <= 0 ? 'text-green-400' : 'text-orange-400'}`}>
+                {weightChange > 0 ? '+' : ''}{weightChange}<span className="text-xs font-normal text-slate-400">kg</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-xs">BF Δ</p>
+              <p className={`font-bold ${bfChange <= 0 ? 'text-green-400' : 'text-orange-400'}`}>
+                {bfChange > 0 ? '+' : ''}{bfChange}<span className="text-xs font-normal text-slate-400">%</span>
+              </p>
+            </div>
+          </div>
+          <p className="text-slate-400 text-xs text-center mb-4">
+            Log a final body measurement in Progress before restarting, so your transformation is captured.
+          </p>
+          <div className="flex gap-2">
+            <Link to="/progress" className="flex-1 btn-secondary text-center text-sm py-2.5">
+              Log final stats →
+            </Link>
+            <button
+              onClick={restartProgram}
+              className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-semibold text-sm py-2.5 rounded-xl transition-colors"
+            >
+              Start Week 1 again 🔁
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Normal phase progress bar */
+        <div className="card mb-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-green-400 text-xs font-semibold tracking-wider">WEEK {week} / 12 · PHASE {phase.phase}</p>
+            <p className="text-white font-semibold">{phase.name}</p>
+            <p className="text-slate-400 text-xs mt-0.5">{phase.weeks} weeks</p>
+          </div>
+          <div className="flex-shrink-0 text-right">
+            <div className="w-20 h-2 bg-slate-700 rounded-full mb-1">
+              <div
+                className="h-full bg-green-400 rounded-full transition-all"
+                style={{ width: `${Math.min(100, (week / 12) * 100)}%` }}
+              />
+            </div>
+            <p className="text-slate-500 text-xs">{Math.min(100, Math.round((week / 12) * 100))}%</p>
+          </div>
+        </div>
+      )}
 
       {/* Today's workout */}
       {workout ? (
@@ -98,7 +156,7 @@ export default function Dashboard() {
           <p className="text-xl font-bold text-white">{workout.name} Day</p>
           <p className="text-slate-400 text-sm mb-3">{workout.focus}</p>
           <div className="flex flex-wrap gap-1 mb-3">
-            {workout.exercises.slice(0,4).map(ex => (
+            {workout.exercises.slice(0, 4).map(ex => (
               <span key={ex.id} className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">
                 {ex.name.split(' ').slice(-2).join(' ')}
               </span>
@@ -156,7 +214,7 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Streak + daily reminder */}
+      {/* This week + non-negotiables */}
       <div className="grid grid-cols-2 gap-3">
         <div className="card text-center">
           <p className="text-slate-400 text-xs mb-1">🔥 This week</p>
