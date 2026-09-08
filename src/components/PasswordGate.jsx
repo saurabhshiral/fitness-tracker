@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { PASSWORD_HASH } from '../config'
 
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message)
@@ -6,6 +7,10 @@ async function sha256(message) {
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
+
+// If PASSWORD_HASH is set in config.js, use it (works on all devices).
+// Otherwise fall back to per-device localStorage mode.
+const GLOBAL_HASH = PASSWORD_HASH?.trim() || null
 
 export default function PasswordGate({ children }) {
   const [authed, setAuthed] = useState(false)
@@ -17,8 +22,12 @@ export default function PasswordGate({ children }) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem('fitness_auth_hash')
-    setHasPassword(!!stored)
+    // In global-hash mode: always show login (no "create" step)
+    if (GLOBAL_HASH) {
+      setHasPassword(true)
+    } else {
+      setHasPassword(!!localStorage.getItem('fitness_auth_hash'))
+    }
     if (sessionStorage.getItem('fitness_authed') === 'true') setAuthed(true)
   }, [])
 
@@ -27,7 +36,7 @@ export default function PasswordGate({ children }) {
     if (!input) return
     setLoading(true)
     const hash = await sha256(input)
-    const stored = localStorage.getItem('fitness_auth_hash')
+    const stored = GLOBAL_HASH || localStorage.getItem('fitness_auth_hash')
     if (hash === stored) {
       sessionStorage.setItem('fitness_authed', 'true')
       setAuthed(true)
@@ -50,7 +59,7 @@ export default function PasswordGate({ children }) {
     setLoading(false)
   }
 
-  if (hasPassword === null) return null // still checking
+  if (hasPassword === null) return null
   if (authed) return children
 
   return (
@@ -66,7 +75,7 @@ export default function PasswordGate({ children }) {
           {!hasPassword ? (
             <form onSubmit={handleSetPassword} className="space-y-4">
               <p className="text-white font-semibold text-center text-lg">Create Your Password</p>
-              <p className="text-slate-400 text-sm text-center">Set a password to protect your data</p>
+              <p className="text-slate-400 text-sm text-center">This device only — or set a global hash in config.js</p>
               <input
                 type="password"
                 placeholder="New password (min 6 characters)"
@@ -107,7 +116,7 @@ export default function PasswordGate({ children }) {
         </div>
 
         <p className="text-slate-600 text-xs text-center mt-4">
-          Password stored locally · Only you can access this
+          {GLOBAL_HASH ? 'Global password · Works on all devices' : 'Password stored locally on this device'}
         </p>
       </div>
     </div>
