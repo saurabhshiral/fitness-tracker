@@ -33,8 +33,30 @@ export function useStorage(key, initialValue) {
   return [value, setValue]
 }
 
+/** Local-timezone YYYY-MM-DD. Never use toISOString() — it shifts to UTC, so
+ *  anything logged before 05:30 IST would land on the previous day. */
+export function dateStr(d = new Date()) {
+  const p = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
 export function today() {
-  return new Date().toISOString().split('T')[0]
+  return dateStr()
+}
+
+/** YYYY-MM-DD n days before today (n positive = past) */
+export function daysAgo(n) {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return dateStr(d)
+}
+
+/** Most recent date (today or earlier) falling on the given weekday 0-6 */
+export function lastWeekday(dow) {
+  const d = new Date()
+  const diff = (d.getDay() - dow + 7) % 7
+  d.setDate(d.getDate() - diff)
+  return dateStr(d)
 }
 
 export function formatDate(dateStr) {

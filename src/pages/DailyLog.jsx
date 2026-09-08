@@ -27,31 +27,42 @@ function Ring({ value, max, color, label, size = 80 }) {
 }
 
 export default function DailyLog() {
-  const dow = new Date().getDay()
+  const [dailyLogs, setDailyLogs] = useStorage('fitness_daily_logs', [])
+  // Editable date so a forgotten day can be backfilled, not just today
+  const [currentDate, setCurrentDate] = useState(today())
+  const dayLog = dailyLogs.find(l => l.date === currentDate)
+
+  // Targets follow the selected date's weekday, not today's
+  const dow = new Date(currentDate + 'T00:00:00').getDay()
   const workout = WORKOUT_PLAN[dow]
   const isCardio = dow === 3
   const calTarget = workout ? (isCardio ? CALORIE_TARGETS.cardio : CALORIE_TARGETS.workout) : CALORIE_TARGETS.rest
   const macros = workout ? MACRO_TARGETS.workout : MACRO_TARGETS.rest
 
-  const [dailyLogs, setDailyLogs] = useStorage('fitness_daily_logs', [])
-  const currentDate = today()
-  const todayLog = dailyLogs.find(l => l.date === currentDate) || {
-    date: currentDate, steps: 0, water: 0, sleep: 0, calories: 0, protein: 0, carbs: 0, fat: 0, foods: [],
-  }
+  const blankForm = { steps: '', water: '', sleep: '', calories: '', protein: '', carbs: '', fat: '' }
+  const formFor = log => log
+    ? {
+        steps: log.steps || '', water: log.water || '', sleep: log.sleep || '',
+        calories: log.calories || '', protein: log.protein || '',
+        carbs: log.carbs || '', fat: log.fat || '',
+      }
+    : blankForm
 
-  const [form, setForm] = useState({
-    steps: todayLog.steps || '',
-    water: todayLog.water || '',
-    sleep: todayLog.sleep || '',
-    calories: todayLog.calories || '',
-    protein: todayLog.protein || '',
-    carbs: todayLog.carbs || '',
-    fat: todayLog.fat || '',
-  })
+  const [form, setForm] = useState(() => formFor(dayLog))
   const [saved, setSaved] = useState(false)
   const [showFoodPicker, setShowFoodPicker] = useState(false)
   const [foodSearch, setFoodSearch] = useState('')
-  const [foods, setFoods] = useState(todayLog.foods || [])
+  const [foods, setFoods] = useState(dayLog?.foods || [])
+  const [customFood, setCustomFood] = useState(null)
+  const [customFoods, setCustomFoods] = useStorage('fitness_custom_foods', [])
+
+  function changeDate(d) {
+    const log = dailyLogs.find(l => l.date === d)
+    setCurrentDate(d)
+    setForm(formFor(log))
+    setFoods(log?.foods || [])
+    setSaved(false)
+  }
 
   function saveLog() {
     const log = {
@@ -66,14 +77,21 @@ export default function DailyLog() {
       foods,
     }
     const filtered = dailyLogs.filter(l => l.date !== currentDate)
-    setDailyLogs([...filtered, log])
+    setDailyLogs([...filtered, log].sort((a, b) => a.date.localeCompare(b.date)))
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
 
-  function addFood(food) {
+  function addFood(food, servings = 1) {
+    const scaled = servings === 1 ? food : {
+      name: `${food.name} ×${servings}`,
+      cal: Math.round(food.cal * servings),
+      protein: Math.round(food.protein * servings),
+      carbs: Math.round(food.carbs * servings),
+      fat: Math.round(food.fat * servings),
+    }
     setFoods(f => {
-      const newFoods = [...f, food]
+      const newFoods = [...f, scaled]
       const totals = newFoods.reduce((a, fd) => ({
         cal: a.cal + fd.cal, protein: a.protein + fd.protein,
         carbs: a.carbs + fd.carbs, fat: a.fat + fd.fat,
@@ -87,8 +105,9 @@ export default function DailyLog() {
       }))
       return newFoods
     })
-    setShowFoodPicker(false)
+    // Stay open — a meal is usually several items
     setFoodSearch('')
+    setSaved(false)
   }
 
   function removeFood(idx) {
@@ -113,16 +132,44 @@ export default function DailyLog() {
   const displayCarbs = parseInt(form.carbs) || totalFromFoods.carbs || 0
   const displayFat = parseInt(form.fat) || totalFromFoods.fat || 0
 
-  const filtered = COMMON_FOODS.filter(f =>
+  const filtered = [...customFoods, ...COMMON_FOODS].filter(f =>
     f.name.toLowerCase().includes(foodSearch.toLowerCase())
   )
 
+  function saveCustomFood(e) {
+    e.preventDefault()
+    const f = {
+      name: customFood.name.trim(),
+      cal: parseInt(customFood.cal) || 0,
+      protein: parseInt(customFood.protein) || 0,
+      carbs: parseInt(customFood.carbs) || 0,
+      fat: parseInt(customFood.fat) || 0,
+      custom: true,
+    }
+    if (!f.name) return
+    // Remember it so it shows up in search next time
+    setCustomFoods([...customFoods.filter(c => c.name !== f.name), f])
+    addFood(f, parseFloat(customFood.servings) || 1)
+    setCustomFood(null)
+  }
+
   return (
     <div className="page">
-      <h1 className="text-xl font-bold text-white mb-1">Daily Log</h1>
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <h1 className="text-xl font-bold text-white">Daily Log</h1>
+        <input
+          type="date"
+          value={currentDate}
+          max={today()}
+          onChange={e => changeDate(e.target.value)}
+          className="bg-slate-700 text-white text-sm rounded-xl px-3 py-2 outline-none border border-slate-600"
+        />
+      </div>
       <p className="text-slate-400 text-sm mb-4">
-        {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        {new Date(currentDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         {' · '}{workout ? `${calTarget} kcal day` : 'Rest day'}
+        {currentDate !== today() && <span className="text-orange-400"> · backfilling</span>}
+        {dayLog && <span className="text-green-400"> · saved</span>}
       </p>
 
       {/* Macro rings */}
@@ -231,14 +278,74 @@ export default function DailyLog() {
         {saved ? '✓ Saved!' : 'Save Today\'s Log'}
       </button>
 
+      {/* Custom food modal */}
+      {customFood && (
+        <div className="fixed inset-0 bg-black/85 z-[60] flex items-center justify-center p-4">
+          <form onSubmit={saveCustomFood} className="bg-slate-800 rounded-2xl p-6 w-full max-w-sm border border-slate-700 space-y-3">
+            <p className="text-white font-bold text-lg">Add Custom Food</p>
+            <div>
+              <label className="text-slate-400 text-xs block mb-1">Name</label>
+              <input
+                type="text"
+                value={customFood.name}
+                onChange={e => setCustomFood(c => ({ ...c, name: e.target.value }))}
+                placeholder="e.g. Palak paneer (1 katori)"
+                className="input-field"
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { key: 'cal', label: 'Calories' },
+                { key: 'protein', label: 'Protein (g)' },
+                { key: 'carbs', label: 'Carbs (g)' },
+                { key: 'fat', label: 'Fat (g)' },
+              ].map(({ key, label }) => (
+                <div key={key}>
+                  <label className="text-slate-400 text-xs block mb-1">{label}</label>
+                  <input
+                    type="number" inputMode="numeric" placeholder="0"
+                    value={customFood[key]}
+                    onChange={e => setCustomFood(c => ({ ...c, [key]: e.target.value }))}
+                    className="input-field py-2 text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs block mb-1">Servings</label>
+              <input
+                type="number" inputMode="decimal" step="0.5" min="0.5"
+                value={customFood.servings}
+                onChange={e => setCustomFood(c => ({ ...c, servings: e.target.value }))}
+                className="input-field py-2 text-sm"
+              />
+            </div>
+            <p className="text-slate-500 text-xs">Saved for reuse — it'll appear in search next time.</p>
+            <div className="flex gap-2 pt-1">
+              <button type="button" onClick={() => setCustomFood(null)} className="btn-secondary flex-1 py-2.5">Cancel</button>
+              <button type="submit" disabled={!customFood.name.trim()} className="btn-primary flex-1 py-2.5 disabled:opacity-40">Add</button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* Food picker modal */}
       {showFoodPicker && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-end p-0">
           <div className="bg-slate-800 rounded-t-2xl w-full max-h-[80vh] flex flex-col border-t border-slate-700">
             <div className="p-4 border-b border-slate-700">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-white font-semibold">Add Food</p>
-                <button onClick={() => setShowFoodPicker(false)} className="text-slate-400 text-2xl leading-none">×</button>
+                <p className="text-white font-semibold">
+                  Add Food
+                  {foods.length > 0 && <span className="text-green-400 text-sm ml-2">{foods.length} logged</span>}
+                </p>
+                <button
+                  onClick={() => { setShowFoodPicker(false); setFoodSearch('') }}
+                  className="bg-green-500 text-white text-sm font-semibold px-4 py-1.5 rounded-xl"
+                >
+                  Done
+                </button>
               </div>
               <input
                 type="text"
@@ -250,18 +357,43 @@ export default function DailyLog() {
               />
             </div>
             <div className="overflow-y-auto flex-1 p-4 space-y-2">
+              <button
+                onClick={() => setCustomFood({
+                  name: foodSearch, cal: '', protein: '', carbs: '', fat: '', servings: '1',
+                })}
+                className="w-full py-3 border border-dashed border-slate-600 text-slate-400 rounded-xl text-sm hover:border-green-500 hover:text-green-400 transition-colors"
+              >
+                ＋ Add custom food{foodSearch && `: "${foodSearch}"`}
+              </button>
+
               {filtered.map((food, i) => (
-                <button
-                  key={i}
-                  onClick={() => addFood(food)}
-                  className="w-full text-left flex items-center justify-between py-3 px-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors"
-                >
-                  <div>
-                    <p className="text-white text-sm font-medium">{food.name}</p>
-                    <p className="text-slate-400 text-xs">{food.cal} kcal · P: {food.protein}g · C: {food.carbs}g · F: {food.fat}g</p>
-                  </div>
-                  <span className="text-green-400 text-xl ml-2">+</span>
-                </button>
+                <div key={i} className="flex items-stretch gap-1.5">
+                  <button
+                    onClick={() => addFood(food)}
+                    className="flex-1 text-left flex items-center justify-between py-3 px-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors min-w-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-white text-sm font-medium truncate">
+                        {food.name}{food.custom && <span className="text-green-400 text-xs ml-1">·custom</span>}
+                      </p>
+                      <p className="text-slate-400 text-xs">{food.cal} kcal · P: {food.protein}g · C: {food.carbs}g · F: {food.fat}g</p>
+                    </div>
+                    <span className="text-green-400 text-xl ml-2 flex-shrink-0">+</span>
+                  </button>
+                  {/* Half / double servings without doing the maths yourself */}
+                  <button
+                    onClick={() => addFood(food, 0.5)}
+                    className="w-11 bg-slate-700/60 hover:bg-slate-600 rounded-xl text-slate-300 text-xs font-medium flex-shrink-0"
+                  >
+                    ½×
+                  </button>
+                  <button
+                    onClick={() => addFood(food, 2)}
+                    className="w-11 bg-slate-700/60 hover:bg-slate-600 rounded-xl text-slate-300 text-xs font-medium flex-shrink-0"
+                  >
+                    2×
+                  </button>
+                </div>
               ))}
             </div>
           </div>

@@ -19,10 +19,29 @@ export default function AuthGate({ children }) {
   const [token, setToken] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [offline, setOffline] = useState(false)
 
   useEffect(() => {
+    let settled = false
+
+    // Gyms have terrible signal. If Supabase can't be reached, don't hang on a
+    // "Loading..." splash forever — fall through to the app using local data.
+    const timeout = setTimeout(() => {
+      if (settled) return
+      settled = true
+      // supabase-js caches the session in localStorage; if one is there we're
+      // a returning signed-in user and can work offline off localStorage.
+      const hasCachedSession = Object.keys(localStorage)
+        .some(k => k.startsWith('sb-') && k.endsWith('-auth-token'))
+      setOffline(true)
+      setPhase(hasCachedSession ? 'ready' : 'email')
+    }, 6000)
+
     // Restore existing session on page load
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeout)
       if (session?.user) {
         setPhase('syncing')
         await pullFromSupabase(session.user.id)
@@ -30,6 +49,12 @@ export default function AuthGate({ children }) {
       } else {
         setPhase('email')
       }
+    }).catch(() => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeout)
+      setOffline(true)
+      setPhase('email')
     })
 
     // Handle magic-link auto-login, token refresh, and sign-out
@@ -52,7 +77,7 @@ export default function AuthGate({ children }) {
         }
       }
     )
-    return () => subscription.unsubscribe()
+    return () => { clearTimeout(timeout); subscription.unsubscribe() }
   }, [])
 
   async function sendOTP(e) {
@@ -96,7 +121,18 @@ export default function AuthGate({ children }) {
 
   if (phase === 'checking') return <Splash message="Loading..." />
   if (phase === 'syncing')  return <Splash message="Syncing your data across devices..." />
-  if (phase === 'ready')    return children
+  if (phase === 'ready') {
+    return (
+      <>
+        {offline && (
+          <div className="bg-orange-500/15 border-b border-orange-500/30 text-orange-300 text-xs text-center py-1.5">
+            Offline — logging locally, will sync when you reconnect
+          </div>
+        )}
+        {children}
+      </>
+    )
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">

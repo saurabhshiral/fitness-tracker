@@ -11,15 +11,18 @@ const KEY_TO_COL = {
   fitness_body_stats:   'body_stats',
   fitness_workout_logs: 'workout_logs',
   fitness_daily_logs:   'daily_logs',
+  fitness_custom_foods: 'custom_foods',
 }
 
 /** On login: pull all data from Supabase → localStorage so pages read instantly */
 export async function pullFromSupabase(userId) {
   if (!supabase) return
   try {
+    // select('*') rather than named columns: if a column hasn't been added to
+    // the table yet, a named select 400s and kills sync for everything else.
     const { data, error } = await supabase
       .from('user_data')
-      .select('body_stats, workout_logs, daily_logs')
+      .select('*')
       .eq('user_id', userId)
       .maybeSingle()
 

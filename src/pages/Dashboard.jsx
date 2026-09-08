@@ -39,18 +39,18 @@ export default function Dashboard() {
   const hr = new Date().getHours()
   const greeting = hr < 12 ? 'morning' : hr < 17 ? 'afternoon' : 'evening'
 
-  // Streak: consecutive days with a workout log
-  const streak = (() => {
-    let s = 0
-    const d = new Date()
-    for (let i = 0; i < 30; i++) {
-      d.setDate(d.getDate() - (i === 0 ? 0 : 1))
-      const ds = d.toISOString().split('T')[0]
-      if (workoutLogs.some(l => l.date === ds)) s++
-      else if (i > 0) break
-    }
-    return s
-  })()
+  // Sessions completed in the current Mon-Sun week. A consecutive-*day* streak
+  // is useless on a 5-day plan — it would reset to zero every weekend.
+  const now = new Date()
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7))
+  const pad = n => String(n).padStart(2, '0')
+  const key = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday); d.setDate(monday.getDate() + i); return key(d)
+  })
+  const weekSessions = weekDates.filter(d => workoutLogs.some(l => l.date === d)).length
+  const loggedToday = workoutLogs.some(l => l.date === currentDate)
 
   return (
     <div className="page">
@@ -84,9 +84,15 @@ export default function Dashboard() {
       {workout ? (
         <Link to="/workout" className="block card mb-4 hover:border-green-500/50 active:scale-[0.98] transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-orange-400 bg-orange-400/10 px-2.5 py-0.5 rounded-full">
-              TODAY'S WORKOUT
-            </span>
+            {loggedToday ? (
+              <span className="text-xs font-semibold text-green-400 bg-green-400/10 px-2.5 py-0.5 rounded-full">
+                ✓ COMPLETED TODAY
+              </span>
+            ) : (
+              <span className="text-xs font-semibold text-orange-400 bg-orange-400/10 px-2.5 py-0.5 rounded-full">
+                TODAY'S WORKOUT
+              </span>
+            )}
             <span className="text-slate-400 text-xs">{workout.duration}</span>
           </div>
           <p className="text-xl font-bold text-white">{workout.name} Day</p>
@@ -98,7 +104,9 @@ export default function Dashboard() {
               </span>
             ))}
           </div>
-          <p className="text-green-400 text-sm font-semibold">Tap to start →</p>
+          <p className="text-green-400 text-sm font-semibold">
+            {loggedToday ? 'Tap to review or edit →' : 'Tap to start →'}
+          </p>
         </Link>
       ) : (
         <div className="card mb-4">
@@ -151,9 +159,21 @@ export default function Dashboard() {
       {/* Streak + daily reminder */}
       <div className="grid grid-cols-2 gap-3">
         <div className="card text-center">
-          <p className="text-slate-400 text-xs mb-1">🔥 Workout streak</p>
-          <p className="text-3xl font-bold text-orange-400">{streak}</p>
-          <p className="text-slate-400 text-xs mt-0.5">day{streak !== 1 ? 's' : ''}</p>
+          <p className="text-slate-400 text-xs mb-1">🔥 This week</p>
+          <p className={`text-3xl font-bold ${weekSessions >= 5 ? 'text-green-400' : 'text-orange-400'}`}>
+            {weekSessions}<span className="text-lg text-slate-500">/5</span>
+          </p>
+          <div className="flex gap-1 justify-center mt-2">
+            {weekDates.slice(0, 5).map(d => (
+              <span
+                key={d}
+                className={`w-2 h-2 rounded-full ${
+                  workoutLogs.some(l => l.date === d) ? 'bg-green-400'
+                    : d > currentDate ? 'bg-slate-600' : 'bg-red-500/40'
+                }`}
+              />
+            ))}
+          </div>
         </div>
         <div className="card">
           <p className="text-slate-400 text-xs mb-2">Today's non-negotiables</p>
