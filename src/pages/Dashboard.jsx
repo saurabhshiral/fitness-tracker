@@ -4,12 +4,16 @@ import { useSettings } from '../hooks/useSettings'
 import { WORKOUT_PLAN, PROGRAM_START, STARTING_STATS } from '../data/fitnessPlan'
 import { targetsFor, dayTypeFor } from '../lib/coach'
 import WeeklyCheckIn from '../components/WeeklyCheckIn'
+import Icon from '../components/Icon'
 
-function StatCard({ label, value, unit, valueColor = 'text-white', sub, icon }) {
+function StatCard({ label, value, unit, valueColor = 'text-slate-50', sub, icon }) {
   return (
     <div className="card">
-      <p className="text-slate-400 text-xs flex items-center gap-1">{icon && <span>{icon}</span>}{label}</p>
-      <p className={`text-2xl font-bold mt-1 ${valueColor}`}>
+      <p className="text-slate-400 text-xs flex items-center gap-1.5">
+        {icon && <Icon name={icon} size={14} strokeWidth={1.9} className="text-slate-500" />}
+        {label}
+      </p>
+      <p className={`text-2xl font-semibold mt-1.5 tracking-tightest tabular-nums ${valueColor}`}>
         {value}
         {unit && <span className="text-sm font-normal text-slate-400 ml-1">{unit}</span>}
       </p>
@@ -75,14 +79,14 @@ export default function Dashboard() {
           <p className="text-slate-400 text-sm">
             {dayNames[dow]}, {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
           </p>
-          <h1 className="text-2xl font-bold text-white">Good {greeting}, Saurabh 👋</h1>
+          <h1 className="text-2xl font-bold text-white">Good {greeting}, Saurabh</h1>
         </div>
         <Link
           to="/settings"
-          className="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-lg hover:border-slate-600 transition-colors"
+          className="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-100 hover:border-slate-600 transition-colors"
           aria-label="Settings"
         >
-          ⚙️
+          <Icon name="settings" size={19} />
         </Link>
       </div>
 
@@ -98,11 +102,11 @@ export default function Dashboard() {
       {/* Program complete banner — replaces the phase bar */}
       {programDone ? (
         <div className="card mb-4 border-yellow-500/40 bg-yellow-500/5">
-          <div className="text-center mb-4">
-            <p className="text-5xl mb-3">🏆</p>
-            <p className="text-yellow-400 text-xs font-semibold tracking-wider mb-1">12-WEEK PROGRAM COMPLETE</p>
-            <p className="text-white font-bold text-xl">You did it, Saurabh!</p>
-            <p className="text-slate-400 text-sm mt-1">12 weeks of consistent training finished.</p>
+          <div className="text-center mb-5">
+            <Icon name="trophy" size={40} strokeWidth={1.3} className="text-yellow-400 mx-auto mb-3" />
+            <p className="eyebrow text-yellow-400 mb-1.5">12-week program complete</p>
+            <p className="text-slate-50 font-semibold text-xl tracking-tightest">You did it, Saurabh</p>
+            <p className="text-slate-400 text-sm mt-1">Twelve weeks of consistent training, finished.</p>
           </div>
           <div className="grid grid-cols-4 gap-2 text-center mb-4">
             <div>
@@ -131,72 +135,103 @@ export default function Dashboard() {
           </p>
           <div className="flex gap-2">
             <Link to="/progress" className="flex-1 btn-secondary text-center text-sm py-2.5">
-              Log final stats →
+              Log final stats
             </Link>
             <button
               onClick={restartProgram}
               className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-semibold text-sm py-2.5 rounded-xl transition-colors"
             >
-              Start Week 1 again 🔁
+              Start week 1 again
             </button>
           </div>
         </div>
       ) : (
-        /* Normal phase progress bar */
-        <div className="card mb-4 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-green-400 text-xs font-semibold tracking-wider">WEEK {week} / 12 · PHASE {phase.phase}</p>
-            <p className="text-white font-semibold">{phase.name}</p>
-            <p className="text-slate-400 text-xs mt-0.5">{phase.weeks} weeks</p>
-          </div>
-          <div className="flex-shrink-0 text-right">
-            <div className="w-20 h-2 bg-slate-700 rounded-full mb-1">
-              <div
-                className="h-full bg-green-400 rounded-full transition-all"
-                style={{ width: `${Math.min(100, (week / 12) * 100)}%` }}
-              />
+        /* Phase progress — a 12-segment track rather than a bare percentage.
+           Discrete units make remaining effort feel finite and countable,
+           which is a far stronger pull than a continuous fill. */
+        <div className="card-quiet mb-4">
+          <div className="flex items-baseline justify-between mb-2.5">
+            <div className="flex items-baseline gap-2">
+              <span className="text-slate-50 font-semibold">Week {week}</span>
+              <span className="text-slate-500 text-sm">of 12</span>
             </div>
-            <p className="text-slate-500 text-xs">{Math.min(100, Math.round((week / 12) * 100))}%</p>
+            <span className="text-slate-400 text-xs">
+              {phase.name} · phase {phase.phase}
+            </span>
+          </div>
+          <div className="flex gap-[3px]">
+            {Array.from({ length: 12 }, (_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+                  i < week - 1 ? 'bg-green-500/70'
+                    : i === week - 1 ? 'bg-orange-400'
+                    : 'bg-slate-700'
+                }`}
+              />
+            ))}
           </div>
         </div>
       )}
 
-      {/* Today's workout */}
+      {/* Today's workout — the single focal point of this screen. It gets the
+          warm accent, the largest type and a real border so the eye lands here
+          first; everything below is deliberately quieter. */}
       {workout ? (
-        <Link to="/workout" className="block card mb-4 hover:border-green-500/50 active:scale-[0.98] transition-all">
-          <div className="flex items-center justify-between mb-2">
-            {loggedToday ? (
-              <span className="text-xs font-semibold text-green-400 bg-green-400/10 px-2.5 py-0.5 rounded-full">
-                ✓ COMPLETED TODAY
+        <Link
+          to="/workout"
+          className={`group block card mb-4 relative overflow-hidden active:scale-[0.985] transition-all duration-200 ${
+            loggedToday ? 'border-green-500/35' : 'border-orange-400/35 hover:border-orange-400/60'
+          }`}
+        >
+          {!loggedToday && (
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-400/[0.07] via-transparent to-transparent pointer-events-none" />
+          )}
+          <div className="relative">
+            <div className="flex items-center justify-between mb-2.5">
+              {loggedToday ? (
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-green-400">
+                  <Icon name="check" size={13} strokeWidth={2.4} /> Completed
+                </span>
+              ) : (
+                <span className="eyebrow text-orange-400">Today&rsquo;s session</span>
+              )}
+              <span className="inline-flex items-center gap-1.5 text-slate-500 text-xs">
+                <Icon name="timer" size={13} /> {workout.duration}
               </span>
-            ) : (
-              <span className="text-xs font-semibold text-orange-400 bg-orange-400/10 px-2.5 py-0.5 rounded-full">
-                TODAY'S WORKOUT
-              </span>
-            )}
-            <span className="text-slate-400 text-xs">{workout.duration}</span>
+            </div>
+
+            <p className="text-[26px] leading-tight font-semibold text-slate-50 tracking-tightest">
+              {workout.name}
+            </p>
+            <p className="text-slate-400 text-sm mt-0.5 mb-3.5">{workout.focus}</p>
+
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {workout.exercises.slice(0, 4).map(ex => (
+                <span key={ex.id} className="text-[11px] bg-slate-700/70 text-slate-300 px-2.5 py-1 rounded-lg">
+                  {ex.name.split(' ').slice(-2).join(' ')}
+                </span>
+              ))}
+            </div>
+
+            <span className={`inline-flex items-center gap-1.5 text-sm font-semibold ${
+              loggedToday ? 'text-green-400' : 'text-orange-400'
+            }`}>
+              {loggedToday ? 'Review or edit' : 'Start training'}
+              <Icon name="arrow" size={15} strokeWidth={2.1}
+                    className="transition-transform duration-200 group-hover:translate-x-0.5" />
+            </span>
           </div>
-          <p className="text-xl font-bold text-white">{workout.name} Day</p>
-          <p className="text-slate-400 text-sm mb-3">{workout.focus}</p>
-          <div className="flex flex-wrap gap-1 mb-3">
-            {workout.exercises.slice(0, 4).map(ex => (
-              <span key={ex.id} className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full">
-                {ex.name.split(' ').slice(-2).join(' ')}
-              </span>
-            ))}
-          </div>
-          <p className="text-green-400 text-sm font-semibold">
-            {loggedToday ? 'Tap to review or edit →' : 'Tap to start →'}
-          </p>
         </Link>
       ) : (
-        <div className="card mb-4">
-          <span className="text-xs font-semibold text-blue-400 bg-blue-400/10 px-2.5 py-0.5 rounded-full">
-            REST DAY
-          </span>
-          <p className="text-white font-semibold mt-2">Active Recovery</p>
+        <div className="card mb-4 border-blue-400/25">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="leaf" size={16} className="text-blue-400" />
+            <span className="eyebrow text-blue-400">Rest day</span>
+          </div>
+          <p className="text-xl font-semibold text-slate-50 tracking-tightest">Active recovery</p>
           <p className="text-slate-400 text-sm mt-1">
-            Walk 20-30 min · Target {settings.stepsTarget.toLocaleString()} steps · Sleep {settings.sleepTarget} hrs
+            Walk 20–30 min · {settings.stepsTarget.toLocaleString()} steps · {settings.sleepTarget} hrs sleep
           </p>
         </div>
       )}
@@ -204,71 +239,89 @@ export default function Dashboard() {
       {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3 mb-4">
         <StatCard
-          icon="🔥"
-          label="Cal target today"
+          icon="flame"
+          label="Calories"
           value={calTarget}
           unit="kcal"
           valueColor="text-orange-400"
-          sub={todayLog.calories ? `Logged ${todayLog.calories} kcal` : 'Not logged yet'}
+          sub={todayLog.calories ? `${todayLog.calories} logged` : 'Not logged yet'}
         />
         <StatCard
-          icon="🥩"
-          label="Protein target"
+          icon="egg"
+          label="Protein"
           value={proteinTarget}
           unit="g"
           valueColor="text-green-400"
-          sub={todayLog.protein ? `Logged ${todayLog.protein}g` : 'Not logged yet'}
+          sub={todayLog.protein ? `${todayLog.protein}g logged` : 'Not logged yet'}
         />
         <StatCard
-          icon="👟"
-          label="Steps today"
+          icon="steps"
+          label="Steps"
           value={todayLog.steps ? todayLog.steps.toLocaleString() : '—'}
-          valueColor={todayLog.steps >= settings.stepsTarget ? 'text-green-400' : 'text-white'}
-          sub={`Target: ${settings.stepsTarget.toLocaleString()}`}
+          valueColor={todayLog.steps >= settings.stepsTarget ? 'text-green-400' : 'text-slate-50'}
+          sub={`Target ${settings.stepsTarget.toLocaleString()}`}
         />
         <StatCard
-          icon="⚖️"
+          icon="scale"
           label="Weight"
           value={latestStat.weight}
           unit="kg"
           sub={bodyStats.length > 1
-            ? `${weightDelta > 0 ? '+' : ''}${weightDelta} from start`
+            ? `${weightDelta > 0 ? '+' : ''}${weightDelta} kg from start`
             : 'Starting weight'}
         />
       </div>
 
       {/* This week + non-negotiables */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="card text-center">
-          <p className="text-slate-400 text-xs mb-1">🔥 This week</p>
-          <p className={`text-3xl font-bold ${weekSessions >= 5 ? 'text-green-400' : 'text-orange-400'}`}>
-            {weekSessions}<span className="text-lg text-slate-500">/5</span>
+        <div className="card">
+          <p className="eyebrow mb-2">This week</p>
+          <p className={`text-3xl font-semibold tracking-tightest tabular-nums ${
+            weekSessions >= 5 ? 'text-green-400' : 'text-slate-50'
+          }`}>
+            {weekSessions}<span className="text-lg text-slate-500 font-normal">/5</span>
           </p>
-          <div className="flex gap-1 justify-center mt-2">
-            {weekDates.slice(0, 5).map(d => (
-              <span
-                key={d}
-                className={`w-2 h-2 rounded-full ${
-                  workoutLogs.some(l => l.date === d) ? 'bg-green-400'
-                    : d > currentDate ? 'bg-slate-600' : 'bg-red-500/40'
-                }`}
-              />
-            ))}
+          {/* Named days beat anonymous dots — you can see *which* session you
+              missed, which is what actually prompts making it up. */}
+          <div className="flex gap-1 mt-2.5">
+            {weekDates.slice(0, 5).map((d, i) => {
+              const hit = workoutLogs.some(l => l.date === d)
+              const future = d > currentDate
+              return (
+                <div key={d} className="flex-1 text-center">
+                  <div className={`h-1.5 rounded-full mb-1 ${
+                    hit ? 'bg-green-400' : future ? 'bg-slate-700' : 'bg-red-400/45'
+                  }`} />
+                  <span className={`text-[9px] ${hit ? 'text-green-400' : 'text-slate-600'}`}>
+                    {['M','T','W','T','F'][i]}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
+
         <div className="card">
-          <p className="text-slate-400 text-xs mb-2">Today's non-negotiables</p>
-          <div className="space-y-1">
-            <p className="text-sm text-slate-300">💧 {settings.waterTargetL}L water</p>
-            <p className="text-sm text-slate-300">😴 {settings.sleepTarget} hrs sleep</p>
-            <p className="text-sm text-slate-300">🥩 {proteinTarget}g protein</p>
+          <p className="eyebrow mb-2.5">Non-negotiables</p>
+          <div className="space-y-2">
+            {[
+              { icon: 'droplet', text: `${settings.waterTargetL}L water` },
+              { icon: 'moon',    text: `${settings.sleepTarget} hrs sleep` },
+              { icon: 'egg',     text: `${proteinTarget}g protein` },
+            ].map(item => (
+              <p key={item.icon} className="flex items-center gap-2 text-sm text-slate-300">
+                <Icon name={item.icon} size={14} className="text-slate-500 flex-shrink-0" />
+                {item.text}
+              </p>
+            ))}
           </div>
         </div>
       </div>
 
       {workout?.tip && (
-        <div className="mt-3 bg-orange-400/10 border border-orange-400/20 rounded-xl px-4 py-2.5">
-          <p className="text-orange-400 text-sm">💡 {workout.tip}</p>
+        <div className="mt-3 flex items-start gap-2.5 bg-slate-800/60 border-l-2 border-orange-400/50 rounded-r-xl px-3.5 py-3">
+          <Icon name="flame" size={15} className="text-orange-400 flex-shrink-0 mt-0.5" />
+          <p className="text-slate-300 text-sm leading-relaxed">{workout.tip}</p>
         </div>
       )}
     </div>

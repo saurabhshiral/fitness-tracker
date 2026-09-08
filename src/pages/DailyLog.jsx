@@ -3,6 +3,7 @@ import { useStorage, today } from '../hooks/useStorage'
 import { COMMON_FOODS, WORKOUT_PLAN, STARTING_STATS } from '../data/fitnessPlan'
 import { useSettings } from '../hooks/useSettings'
 import { targetsFor, dayTypeFor } from '../lib/coach'
+import Icon from '../components/Icon'
 
 function Ring({ value, max, color, label, size = 80 }) {
   const r = (size / 2) - 8
@@ -240,16 +241,18 @@ export default function DailyLog() {
         <p className="text-white font-semibold mb-3">Habits</p>
         <div className="space-y-3">
           {[
-            { key: 'steps', label: '👟 Steps', unit: 'steps', target: settings.stepsTarget, inputMode: 'numeric' },
-            { key: 'water', label: '💧 Water', unit: 'litres', target: settings.waterTargetL, inputMode: 'decimal', step: '0.5' },
-            { key: 'sleep', label: '😴 Sleep', unit: 'hours', target: settings.sleepTarget, inputMode: 'decimal', step: '0.5' },
-          ].map(({ key, label, unit, target, inputMode, step }) => {
+            { key: 'steps', label: 'Steps', icon: 'steps', unit: 'steps', target: settings.stepsTarget, inputMode: 'numeric' },
+            { key: 'water', label: 'Water', icon: 'droplet', unit: 'litres', target: settings.waterTargetL, inputMode: 'decimal', step: '0.5' },
+            { key: 'sleep', label: 'Sleep', icon: 'moon', unit: 'hours', target: settings.sleepTarget, inputMode: 'decimal', step: '0.5' },
+          ].map(({ key, label, unit, target, inputMode, step, icon }) => {
             const val = key === 'steps' ? parseInt(form[key]) || 0 : parseFloat(form[key]) || 0
             const pct = Math.min(100, Math.round((val / target) * 100))
             return (
               <div key={key}>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-slate-300 text-sm">{label}</label>
+                  <label className="flex items-center gap-1.5 text-slate-300 text-sm">
+                    <Icon name={icon} size={14} className="text-slate-500" />{label}
+                  </label>
                   <span className={`text-xs ${val >= target ? 'text-green-400' : 'text-slate-400'}`}>
                     {val}/{target} {unit} ({pct}%)
                   </span>

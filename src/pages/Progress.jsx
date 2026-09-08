@@ -16,8 +16,8 @@ const CHART_OPTS = {
   maintainAspectRatio: false,
   plugins: { legend: { display: false }, tooltip: { mode: 'index' } },
   scales: {
-    x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#1e293b' } },
-    y: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#1e293b' } },
+    x: { ticks: { color: '#938B76', font: { size: 11 } }, grid: { color: '#2E2A20' } },
+    y: { ticks: { color: '#938B76', font: { size: 11 } }, grid: { color: '#2E2A20' } },
   },
 }
 
@@ -140,7 +140,7 @@ function StrengthProgress({ workoutLogs }) {
             data={makeLineData(
               active.points.map(p => formatDate(p.date)),
               active.points.map(p => p.top),
-              '#eab308'
+              '#D9B368'
             )}
             options={CHART_OPTS}
           />
@@ -319,9 +319,9 @@ export default function Progress() {
       <WeeklySummary workoutLogs={workoutLogs} dailyLogs={dailyLogs} />
 
       {/* Charts */}
-      <Chart title="Body Weight" labels={labels} data={weights} color="#22c55e" unit="kg" />
-      <Chart title="Body Fat %" labels={labels} data={fats} color="#f97316" unit="%" />
-      <Chart title="Waist" labels={labels} data={waists} color="#818cf8" unit="inches" />
+      <Chart title="Body Weight" labels={labels} data={weights} color="#8CA57E" unit="kg" />
+      <Chart title="Body Fat %" labels={labels} data={fats} color="#CE8A66" unit="%" />
+      <Chart title="Waist" labels={labels} data={waists} color="#85A3B8" unit="inches" />
 
       <StrengthProgress workoutLogs={workoutLogs} />
 
@@ -368,10 +368,10 @@ export default function Progress() {
         <p className="text-white font-semibold mb-3">Backup & Restore</p>
         <div className="flex gap-2">
           <button onClick={exportData} className="btn-secondary flex-1 text-sm py-2.5">
-            ⬇ Export JSON
+            Export JSON
           </button>
           <label className="btn-secondary flex-1 text-sm py-2.5 text-center cursor-pointer">
-            ⬆ Import JSON
+            Import JSON
             <input type="file" accept=".json" className="hidden" onChange={handleImport} />
           </label>
         </div>

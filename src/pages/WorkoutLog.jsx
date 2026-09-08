@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useStorage, lastWeekday, formatDate } from '../hooks/useStorage'
 import { WORKOUT_PLAN } from '../data/fitnessPlan'
 import RestTimer from '../components/RestTimer'
+import Icon from '../components/Icon'
 
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 const SHORT_DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
@@ -308,8 +309,8 @@ export default function WorkoutLog() {
         <h1 className="text-xl font-bold text-white mb-4">Log Workout</h1>
         <DaySelector selectedDay={selectedDay} onChange={changeDay} />
         <div className="card text-center py-12 mt-4">
-          <p className="text-4xl mb-3">🌴</p>
-          <p className="text-white font-semibold">Rest day</p>
+          <Icon name="leaf" size={34} strokeWidth={1.3} className="text-blue-400 mx-auto mb-3" />
+          <p className="text-slate-50 font-semibold">Rest day</p>
           <p className="text-slate-400 text-sm mt-1">Pick a day above to log a missed session</p>
         </div>
       </div>
@@ -328,7 +329,7 @@ export default function WorkoutLog() {
 
       {newPR && !activeTimer && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-40 bg-yellow-500 text-slate-900 font-bold px-5 py-2.5 rounded-full shadow-lg text-sm animate-bounce">
-          🏆 New Personal Record!
+          <span className="inline-flex items-center gap-1.5"><Icon name="trophy" size={15} strokeWidth={2.2} /> New personal record</span>
         </div>
       )}
 
@@ -492,14 +493,14 @@ export default function WorkoutLog() {
             disabled={doneSets === 0}
             className="flex-1 bg-slate-700 disabled:opacity-30 text-slate-300 text-xs font-medium py-2 rounded-xl"
           >
-            ↩ Undo last set
+            Undo last set
           </button>
           <button
             onClick={() => setShowClearConfirm(true)}
             disabled={doneSets === 0}
             className="flex-1 bg-slate-700 disabled:opacity-30 text-slate-300 text-xs font-medium py-2 rounded-xl"
           >
-            {saved ? '🗑 Delete' : '🗑 Reset'}
+            <span className="inline-flex items-center gap-1.5"><Icon name="trash" size={13} /> {saved ? 'Delete' : 'Reset'}</span>
           </button>
         </div>
       </div>
@@ -631,7 +632,8 @@ export default function WorkoutLog() {
       {/* Save / saved */}
       {saved ? (
         <div className="card text-center bg-green-500/10 border-green-500/30">
-          <p className="text-green-400 font-bold text-xl">🎉 Workout saved!</p>
+          <Icon name="check" size={26} strokeWidth={2.2} className="text-green-400 mx-auto mb-1.5" />
+          <p className="text-green-400 font-semibold text-lg">Workout saved</p>
           <p className="text-slate-400 text-sm mt-1">{doneSets} sets logged for {formatDate(logDate)}</p>
         </div>
       ) : (
@@ -644,7 +646,7 @@ export default function WorkoutLog() {
               : 'bg-slate-800 text-slate-600 cursor-not-allowed'
           }`}
         >
-          {allDone ? '🎉 Complete & Save'
+          {allDone ? 'Complete & save'
             : doneSets > 0 ? `Save (${doneSets}/${totalSets} sets)`
             : 'Log sets above to save'}
         </button>

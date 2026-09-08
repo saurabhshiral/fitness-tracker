@@ -2,15 +2,16 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { today } from '../hooks/useStorage'
 import { calorieAdvice, overloadAdvice } from '../lib/coach'
+import Icon from './Icon'
 
 const STATUS_STYLE = {
-  'need-data':    { border: 'border-slate-600',      accent: 'text-slate-400',  icon: '📊' },
-  'need-logging': { border: 'border-blue-500/30',    accent: 'text-blue-400',   icon: '📝' },
-  'adherence':    { border: 'border-orange-400/30',  accent: 'text-orange-400', icon: '⚠️' },
-  'hold':         { border: 'border-green-500/30',   accent: 'text-green-400',  icon: '✓' },
-  'decrease':     { border: 'border-orange-400/30',  accent: 'text-orange-400', icon: '↓' },
-  'increase':     { border: 'border-blue-500/30',    accent: 'text-blue-400',   icon: '↑' },
-  'floor':        { border: 'border-red-500/30',     accent: 'text-red-400',    icon: '🛑' },
+  'need-data':    { border: 'border-slate-700',     accent: 'text-slate-300',  icon: 'trending' },
+  'need-logging': { border: 'border-blue-400/30',   accent: 'text-blue-400',   icon: 'notebook' },
+  'adherence':    { border: 'border-orange-400/30', accent: 'text-orange-400', icon: 'flame' },
+  'hold':         { border: 'border-green-500/30',  accent: 'text-green-400',  icon: 'check' },
+  'decrease':     { border: 'border-orange-400/30', accent: 'text-orange-400', icon: 'flame' },
+  'increase':     { border: 'border-blue-400/30',   accent: 'text-blue-400',   icon: 'leaf' },
+  'floor':        { border: 'border-red-400/30',    accent: 'text-red-400',    icon: 'scale' },
 }
 
 export default function WeeklyCheckIn({ bodyStats, dailyLogs, workoutLogs, settings, setSettings, latestStat }) {
@@ -39,19 +40,20 @@ export default function WeeklyCheckIn({ bodyStats, dailyLogs, workoutLogs, setti
 
   return (
     <div className={`card mb-4 ${style.border}`}>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <p className="text-slate-400 text-xs font-semibold tracking-wider">WEEKLY CHECK-IN</p>
+      <div className="flex items-start justify-between gap-2 mb-2.5">
+        <p className="eyebrow">Weekly check-in</p>
         <button
           onClick={() => setDismissed(true)}
-          className="text-slate-600 hover:text-slate-400 text-lg leading-none -mt-1"
+          className="text-slate-600 hover:text-slate-300 -mt-0.5 -mr-0.5 p-1 transition-colors"
           aria-label="Dismiss"
         >
-          ×
+          <Icon name="close" size={14} strokeWidth={2} />
         </button>
       </div>
 
-      <p className={`font-bold ${style.accent} mb-1`}>
-        {style.icon} {advice.headline}
+      <p className={`font-semibold flex items-center gap-2 ${style.accent} mb-1.5`}>
+        <Icon name={style.icon} size={17} strokeWidth={2} className="flex-shrink-0" />
+        {advice.headline}
       </p>
       <p className="text-slate-400 text-sm leading-relaxed mb-3">{advice.detail}</p>
 
@@ -82,8 +84,9 @@ export default function WeeklyCheckIn({ bodyStats, dailyLogs, workoutLogs, setti
       )}
 
       {advice.status === 'need-data' && (
-        <Link to="/progress" className="block w-full text-center bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2.5 rounded-xl transition-colors mb-3">
-          Log today's weight →
+        <Link to="/progress" className="flex items-center justify-center gap-1.5 w-full bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm font-medium py-2.5 rounded-xl transition-colors mb-3">
+          Log today&rsquo;s weight
+          <Icon name="arrow" size={14} strokeWidth={2} />
         </Link>
       )}
 
@@ -100,17 +103,24 @@ export default function WeeklyCheckIn({ bodyStats, dailyLogs, workoutLogs, setti
 
       {/* Progressive overload suggestions */}
       {lifts.length > 0 && (
-        <div className="border-t border-slate-700 pt-3">
-          <p className="text-slate-400 text-xs font-semibold tracking-wider mb-2">TRAINING</p>
-          <div className="space-y-2">
+        <div className="border-t border-slate-700/70 pt-3">
+          <p className="eyebrow mb-2.5">Training</p>
+          <div className="space-y-2.5">
             {lifts.map((l, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <span className="text-sm flex-shrink-0 mt-0.5">
-                  {l.type === 'increase' ? '🔼' : l.type === 'regression' ? '🔽' : '⏸'}
+              <div key={i} className="flex items-start gap-2.5">
+                <span className={`flex-shrink-0 mt-0.5 ${
+                  l.type === 'increase' ? 'text-green-400'
+                    : l.type === 'regression' ? 'text-red-400' : 'text-yellow-400'
+                }`}>
+                  <Icon
+                    name={l.type === 'increase' ? 'trending' : l.type === 'regression' ? 'scale' : 'timer'}
+                    size={15}
+                    strokeWidth={2}
+                  />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{l.exercise}</p>
-                  <p className="text-slate-400 text-xs">{l.detail}</p>
+                  <p className="text-slate-100 text-sm font-medium truncate">{l.exercise}</p>
+                  <p className="text-slate-400 text-xs leading-relaxed">{l.detail}</p>
                 </div>
               </div>
             ))}

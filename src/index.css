@@ -12,9 +12,25 @@ html {
 }
 
 body {
-  @apply bg-slate-900 text-white min-h-screen;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  @apply bg-slate-900 text-slate-50 min-h-screen antialiased;
+  /* A faint warm wash from the top stops the background reading as flat
+     #000-ish fill — real interfaces almost always have some depth here. */
+  background-image:
+    radial-gradient(120% 60% at 50% 0%, rgba(206, 138, 102, 0.055) 0%, transparent 62%);
+  background-attachment: fixed;
   overscroll-behavior: none;
+  font-feature-settings: 'cv02', 'cv03', 'cv04';
+}
+
+/* Headings set tighter than default — untouched tracking on large text is a
+   giveaway that type was never actually adjusted. */
+h1, h2, h3 {
+  @apply tracking-tightest;
+}
+
+/* Numbers in stats should never shift width as they tick up */
+.tabular, .tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 input[type=number]::-webkit-inner-spin-button,
@@ -22,22 +38,63 @@ input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
 }
 
+/* Date/time pickers default to a black glyph that vanishes on dark ground */
+input[type=date]::-webkit-calendar-picker-indicator {
+  filter: invert(0.75) sepia(0.2);
+  cursor: pointer;
+}
+
 ::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { @apply bg-slate-800; }
+::-webkit-scrollbar-track { @apply bg-slate-900; }
 ::-webkit-scrollbar-thumb { @apply bg-slate-600 rounded; }
 
-.page { @apply pb-24 px-4 pt-4 max-w-lg mx-auto; }
+::selection {
+  background: rgba(206, 138, 102, 0.28);
+}
 
-.card { @apply bg-slate-800 rounded-2xl p-4 border border-slate-700/50; }
+.page {
+  @apply pb-28 px-4 pt-5 max-w-lg mx-auto;
+}
+
+/* Cards carry a hairline top highlight, the way a lit surface actually
+   behaves. Flat 1px borders on every side is the generated-UI default. */
+.card {
+  @apply bg-slate-800 rounded-2xl p-4 border border-slate-700/70;
+  box-shadow:
+    inset 0 1px 0 0 rgba(243, 238, 227, 0.045),
+    0 1px 2px 0 rgba(0, 0, 0, 0.28);
+}
+
+.card-quiet {
+  @apply bg-slate-800/50 rounded-2xl p-4 border border-slate-700/40;
+}
 
 .btn-primary {
-  @apply bg-green-500 hover:bg-green-400 active:bg-green-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors;
+  @apply bg-orange-500 hover:bg-orange-400 active:bg-orange-600 text-slate-900
+         font-semibold py-3 px-4 rounded-xl transition-all duration-200 active:scale-[0.98];
 }
 
 .btn-secondary {
-  @apply bg-slate-700 hover:bg-slate-600 active:bg-slate-800 text-white py-3 px-4 rounded-xl transition-colors;
+  @apply bg-slate-700 hover:bg-slate-600 active:bg-slate-700 text-slate-100
+         py-3 px-4 rounded-xl transition-all duration-200 active:scale-[0.98];
 }
 
 .input-field {
-  @apply w-full bg-slate-700 text-white rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 placeholder-slate-400;
+  @apply w-full bg-slate-900/60 text-slate-50 rounded-xl px-4 py-3 outline-none
+         border border-slate-700 focus:border-orange-400/60 focus:ring-2
+         focus:ring-orange-400/15 placeholder-slate-500 transition-colors;
+}
+
+/* Section label above a group — small caps, wide tracking, low contrast.
+   Carries hierarchy without adding another colour. */
+.eyebrow {
+  @apply text-slate-500 text-[11px] font-semibold uppercase tracking-[0.12em];
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
