@@ -77,9 +77,9 @@ function SwapModal({ exercise, exIdx, onSwap, onClose }) {
   const alts = exercise.alternatives || []
   if (!alts.length) {
     return (
-      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="fixed inset-0 scrim flex items-center justify-center z-50 p-4" onClick={onClose}>
         <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-sm border border-slate-700 text-center" onClick={e => e.stopPropagation()}>
-          <p className="text-white font-bold mb-2">No alternatives</p>
+          <p className="text-slate-50 font-bold mb-2">No alternatives</p>
           <p className="text-slate-400 text-sm mb-4">No substitutes are defined for this exercise yet.</p>
           <button onClick={onClose} className="btn-secondary w-full">Close</button>
         </div>
@@ -87,11 +87,11 @@ function SwapModal({ exercise, exIdx, onSwap, onClose }) {
     )
   }
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 scrim flex items-end sm:items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-sm border border-slate-700" onClick={e => e.stopPropagation()}>
-        <p className="text-white font-bold text-base mb-0.5">Swap exercise</p>
+        <p className="text-slate-50 font-bold text-base mb-0.5">Swap exercise</p>
         <p className="text-slate-400 text-xs mb-4">
-          Equipment busy? Pick a substitute for <span className="text-white">{exercise.name}</span>.
+          Equipment busy? Pick a substitute for <span className="text-slate-50">{exercise.name}</span>.
         </p>
         <div className="space-y-2 mb-4">
           {alts.map((alt, i) => (
@@ -100,7 +100,7 @@ function SwapModal({ exercise, exIdx, onSwap, onClose }) {
               onClick={() => onSwap(exIdx, alt)}
               className="w-full text-left bg-slate-700 hover:bg-slate-600 rounded-2xl p-4 transition-colors"
             >
-              <p className="text-white font-semibold text-sm">{alt.name}</p>
+              <p className="text-slate-50 font-semibold text-sm">{alt.name}</p>
               <p className="text-slate-400 text-xs mt-0.5">{alt.hint}</p>
             </button>
           ))}
@@ -306,7 +306,7 @@ export default function WorkoutLog() {
   if (!workout) {
     return (
       <div className="page">
-        <h1 className="text-xl font-bold text-white mb-4">Log Workout</h1>
+        <h1 className="text-xl font-bold text-slate-50 mb-4">Log Workout</h1>
         <DaySelector selectedDay={selectedDay} onChange={changeDay} />
         <div className="card text-center py-12 mt-4">
           <Icon name="leaf" size={34} strokeWidth={1.3} className="text-blue-400 mx-auto mb-3" />
@@ -345,9 +345,9 @@ export default function WorkoutLog() {
 
       {/* Set logging modal */}
       {setModal !== null && (
-        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 scrim flex items-end sm:items-center justify-center z-50 p-4">
           <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-sm border border-slate-700">
-            <p className="text-white font-bold text-base mb-0.5">{session[setModal.exIdx]?.name}</p>
+            <p className="text-slate-50 font-bold text-base mb-0.5">{session[setModal.exIdx]?.name}</p>
             <p className="text-slate-400 text-sm mb-1">
               Set {setModal.setIdx + 1} of {session[setModal.exIdx]?.targetSets}
               {' · '}Target: {session[setModal.exIdx]?.targetReps} reps
@@ -392,10 +392,10 @@ export default function WorkoutLog() {
                     onClick={() => setModalRpe(modalRpe === r ? null : r)}
                     className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-colors ${
                       modalRpe === r
-                        ? r <= 7 ? 'bg-green-500 text-white'
+                        ? r <= 7 ? 'bg-green-500 text-oncolor'
                           : r === 8 ? 'bg-yellow-500 text-slate-900'
-                          : r === 9 ? 'bg-orange-500 text-white'
-                          : 'bg-red-500 text-white'
+                          : r === 9 ? 'bg-orange-500 text-oncolor'
+                          : 'bg-red-500 text-oncolor'
                         : 'bg-slate-700 text-slate-300'
                     }`}
                   >
@@ -405,7 +405,7 @@ export default function WorkoutLog() {
                 <button
                   onClick={() => setModalRpe(null)}
                   className={`px-3 py-2.5 rounded-xl text-xs transition-colors ${
-                    modalRpe === null ? 'bg-slate-600 text-white' : 'bg-slate-700/50 text-slate-500'
+                    modalRpe === null ? 'bg-slate-600 text-slate-50' : 'bg-slate-700/50 text-slate-500'
                   }`}
                 >
                   —
@@ -432,9 +432,9 @@ export default function WorkoutLog() {
 
       {/* Clear / delete confirm */}
       {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 scrim flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-xs border border-slate-700 text-center">
-            <p className="text-white font-bold mb-2">{saved ? 'Delete this workout?' : 'Reset workout?'}</p>
+            <p className="text-slate-50 font-bold mb-2">{saved ? 'Delete this workout?' : 'Reset workout?'}</p>
             <p className="text-slate-400 text-sm mb-5">
               {saved
                 ? `The saved workout for ${formatDate(logDate)} will be removed.`
@@ -444,7 +444,7 @@ export default function WorkoutLog() {
               <button onClick={() => setShowClearConfirm(false)} className="btn-secondary flex-1 py-2.5 text-sm">Cancel</button>
               <button
                 onClick={saved ? deleteWorkout : clearWorkout}
-                className="flex-1 bg-red-500 hover:bg-red-400 text-white font-semibold py-2.5 rounded-xl text-sm"
+                className="flex-1 bg-red-500 hover:bg-red-400 text-oncolor font-semibold py-2.5 rounded-xl text-sm"
               >
                 {saved ? 'Delete' : 'Reset'}
               </button>
@@ -455,7 +455,7 @@ export default function WorkoutLog() {
 
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-1">
-        <h1 className="text-xl font-bold text-white">{workout.name} Day</h1>
+        <h1 className="text-xl font-bold text-slate-50">{workout.name} Day</h1>
         <DaySelector selectedDay={selectedDay} onChange={changeDay} />
       </div>
       <p className="text-slate-400 text-xs mb-3">
@@ -526,17 +526,16 @@ export default function WorkoutLog() {
                 {/* Expand/collapse — most of the row */}
                 <button className="flex-1 text-left py-1" onClick={() => setExpanded(isExpanded ? -1 : exIdx)}>
                   <div className="flex items-center gap-3">
-                    <span
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                      style={{ background: complete ? '#22c55e22' : isNext ? '#f9741622' : '#334155' }}
-                    >
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                      complete ? 'bg-green-400/15' : isNext ? 'bg-orange-400/15' : 'bg-slate-700'
+                    }`}>
                       <span className={complete ? 'text-green-400' : isNext ? 'text-orange-400' : 'text-slate-300'}>
                         {complete ? '✓' : exIdx + 1}
                       </span>
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <p className={`font-semibold text-sm truncate ${complete ? 'text-green-400' : isNext ? 'text-white' : 'text-slate-300'}`}>
+                        <p className={`font-semibold text-sm truncate ${complete ? 'text-green-400' : isNext ? 'text-slate-50' : 'text-slate-300'}`}>
                           {ex.name}
                         </p>
                         {ex.swappedFrom && (
@@ -581,7 +580,7 @@ export default function WorkoutLog() {
                         className={`rounded-2xl font-semibold transition-all active:scale-95 ${
                           s.done
                             ? 'bg-green-500/20 border border-green-500/40 text-green-400 py-4'
-                            : 'bg-slate-700 active:bg-slate-600 text-white py-5'
+                            : 'bg-slate-700 active:bg-slate-600 text-slate-50 py-5'
                         }`}
                       >
                         {s.done ? (
@@ -641,8 +640,8 @@ export default function WorkoutLog() {
           onClick={saveWorkout}
           disabled={doneSets === 0}
           className={`w-full py-4 rounded-2xl font-bold text-lg transition-colors ${
-            allDone ? 'bg-green-500 hover:bg-green-400 text-white'
-              : doneSets > 0 ? 'bg-slate-700 text-white'
+            allDone ? 'bg-green-500 hover:bg-green-400 text-oncolor'
+              : doneSets > 0 ? 'bg-slate-700 text-slate-50'
               : 'bg-slate-800 text-slate-600 cursor-not-allowed'
           }`}
         >
@@ -664,7 +663,7 @@ function DaySelector({ selectedDay, onChange }) {
     <select
       value={selectedDay}
       onChange={e => onChange(e.target.value)}
-      className="bg-slate-700 text-white text-sm rounded-xl px-3 py-2 outline-none border border-slate-600 max-w-[150px]"
+      className="bg-slate-700 text-slate-50 text-sm rounded-xl px-3 py-2 outline-none border border-slate-600 max-w-[150px]"
     >
       {options.map(o => (
         <option key={o.day} value={o.day}>{SHORT_DAYS[o.day]} · {o.label}</option>

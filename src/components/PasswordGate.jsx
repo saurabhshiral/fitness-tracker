@@ -1,3 +1,4 @@
+import Icon from './Icon'
 import { useState, useEffect } from 'react'
 import { PASSWORD_HASH } from '../config'
 
@@ -66,15 +67,15 @@ export default function PasswordGate({ children }) {
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">💪</div>
-          <h1 className="text-2xl font-bold text-white">Fitness Tracker</h1>
+          <Icon name="dumbbell" size={48} strokeWidth={1.4} className="text-orange-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-slate-50">Fitness Tracker</h1>
           <p className="text-slate-400 text-sm mt-1">Saurabh's personal training dashboard</p>
         </div>
 
         <div className="bg-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700/50">
           {!hasPassword ? (
             <form onSubmit={handleSetPassword} className="space-y-4">
-              <p className="text-white font-semibold text-center text-lg">Create Your Password</p>
+              <p className="text-slate-50 font-semibold text-center text-lg">Create Your Password</p>
               <p className="text-slate-400 text-sm text-center">This device only — or set a global hash in config.js</p>
               <input
                 type="password"
@@ -98,7 +99,7 @@ export default function PasswordGate({ children }) {
             </form>
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
-              <p className="text-white font-semibold text-center text-lg">Welcome Back</p>
+              <p className="text-slate-50 font-semibold text-center text-lg">Welcome Back</p>
               <input
                 type="password"
                 placeholder="Enter your password"

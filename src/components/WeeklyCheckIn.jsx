@@ -62,21 +62,21 @@ export default function WeeklyCheckIn({ bodyStats, dailyLogs, workoutLogs, setti
         <div className="grid grid-cols-3 gap-2 text-center bg-slate-700/30 rounded-xl py-2.5 mb-3">
           <div>
             <p className="text-slate-500 text-xs">Actual</p>
-            <p className="text-white font-bold text-sm">
+            <p className="text-slate-50 font-bold text-sm">
               {advice.trend.rate > 0 ? '+' : ''}{advice.trend.rate.toFixed(2)}
               <span className="text-xs font-normal text-slate-400"> kg/wk</span>
             </p>
           </div>
           <div>
             <p className="text-slate-500 text-xs">Goal</p>
-            <p className="text-white font-bold text-sm">
+            <p className="text-slate-50 font-bold text-sm">
               {advice.goalRate > 0 ? '+' : ''}{advice.goalRate}
               <span className="text-xs font-normal text-slate-400"> kg/wk</span>
             </p>
           </div>
           <div>
             <p className="text-slate-500 text-xs">Avg intake</p>
-            <p className="text-white font-bold text-sm">
+            <p className="text-slate-50 font-bold text-sm">
               {advice.adherence.avgCalories || '—'}
             </p>
           </div>

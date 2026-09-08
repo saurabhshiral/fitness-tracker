@@ -4,15 +4,19 @@ import { COMMON_FOODS, WORKOUT_PLAN, STARTING_STATS } from '../data/fitnessPlan'
 import { useSettings } from '../hooks/useSettings'
 import { targetsFor, dayTypeFor } from '../lib/coach'
 import Icon from '../components/Icon'
+import { useTheme, paletteColor } from '../hooks/useTheme'
 
-function Ring({ value, max, color, label, size = 80 }) {
+function Ring({ value, max, token, label, size = 80 }) {
+  const { resolved } = useTheme()
+  const color = paletteColor(token)   // canvas-free, but SVG stroke still needs a literal
+  void resolved                        // re-read the variable when the theme flips
   const r = (size / 2) - 8
   const circ = 2 * Math.PI * r
   const pct = Math.min(value / max, 1)
   return (
     <div className="flex flex-col items-center">
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#1e293b" strokeWidth="7" />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" strokeWidth="7" className="stroke-slate-700" />
         <circle
           cx={size/2} cy={size/2} r={r}
           fill="none" stroke={color} strokeWidth="7"
@@ -22,7 +26,7 @@ function Ring({ value, max, color, label, size = 80 }) {
           style={{ transition: 'stroke-dashoffset 0.5s ease' }}
         />
       </svg>
-      <p className={`text-sm font-bold -mt-12 ${value >= max ? 'text-green-400' : 'text-white'}`}>{value}</p>
+      <p className={`text-sm font-bold -mt-12 ${value >= max ? 'text-green-400' : 'text-slate-50'}`}>{value}</p>
       <p className="text-xs text-slate-400 mt-8">{label}</p>
       <p className="text-xs text-slate-500">/{max}</p>
     </div>
@@ -163,13 +167,13 @@ export default function DailyLog() {
   return (
     <div className="page">
       <div className="flex items-center justify-between gap-2 mb-1">
-        <h1 className="text-xl font-bold text-white">Daily Log</h1>
+        <h1 className="text-xl font-bold text-slate-50">Daily Log</h1>
         <input
           type="date"
           value={currentDate}
           max={today()}
           onChange={e => changeDate(e.target.value)}
-          className="bg-slate-700 text-white text-sm rounded-xl px-3 py-2 outline-none border border-slate-600"
+          className="bg-slate-700 text-slate-50 text-sm rounded-xl px-3 py-2 outline-none border border-slate-600"
         />
       </div>
       <p className="text-slate-400 text-sm mb-4">
@@ -183,17 +187,17 @@ export default function DailyLog() {
       <div className="card mb-4">
         <p className="text-slate-400 text-xs mb-3">TODAY'S MACROS</p>
         <div className="flex justify-around">
-          <Ring value={displayCal} max={calTarget} color="#f97316" label="Cal" size={76} />
-          <Ring value={displayProtein} max={macros.protein} color="#22c55e" label="Protein" size={76} />
-          <Ring value={displayCarbs} max={macros.carbs} color="#60a5fa" label="Carbs" size={76} />
-          <Ring value={displayFat} max={macros.fat} color="#a78bfa" label="Fat" size={76} />
+          <Ring value={displayCal} max={calTarget} token="orange-400" label="Cal" size={76} />
+          <Ring value={displayProtein} max={macros.protein} token="green-400" label="Protein" size={76} />
+          <Ring value={displayCarbs} max={macros.carbs} token="blue-400" label="Carbs" size={76} />
+          <Ring value={displayFat} max={macros.fat} token="purple-400" label="Fat" size={76} />
         </div>
       </div>
 
       {/* Food log */}
       <div className="card mb-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-white font-semibold">Food Log</p>
+          <p className="text-slate-50 font-semibold">Food Log</p>
           <button onClick={() => setShowFoodPicker(true)} className="text-green-400 text-sm font-semibold">+ Add food</button>
         </div>
         {foods.length === 0 ? (
@@ -203,7 +207,7 @@ export default function DailyLog() {
             {foods.map((f, i) => (
               <div key={i} className="flex items-center justify-between text-sm">
                 <div className="flex-1 min-w-0">
-                  <p className="text-white truncate">{f.name}</p>
+                  <p className="text-slate-50 truncate">{f.name}</p>
                   <p className="text-slate-400 text-xs">{f.cal} kcal · {f.protein}g protein</p>
                 </div>
                 <button onClick={() => removeFood(i)} className="text-slate-500 hover:text-red-400 ml-2 text-lg leading-none">×</button>
@@ -238,7 +242,7 @@ export default function DailyLog() {
 
       {/* Steps + Water + Sleep */}
       <div className="card mb-4">
-        <p className="text-white font-semibold mb-3">Habits</p>
+        <p className="text-slate-50 font-semibold mb-3">Habits</p>
         <div className="space-y-3">
           {[
             { key: 'steps', label: 'Steps', icon: 'steps', unit: 'steps', target: settings.stepsTarget, inputMode: 'numeric' },
@@ -289,9 +293,9 @@ export default function DailyLog() {
 
       {/* Custom food modal */}
       {customFood && (
-        <div className="fixed inset-0 bg-black/85 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 scrim z-[60] flex items-center justify-center p-4">
           <form onSubmit={saveCustomFood} className="bg-slate-800 rounded-2xl p-6 w-full max-w-sm border border-slate-700 space-y-3">
-            <p className="text-white font-bold text-lg">Add Custom Food</p>
+            <p className="text-slate-50 font-bold text-lg">Add Custom Food</p>
             <div>
               <label className="text-slate-400 text-xs block mb-1">Name</label>
               <input
@@ -341,17 +345,17 @@ export default function DailyLog() {
 
       {/* Food picker modal */}
       {showFoodPicker && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-end p-0">
+        <div className="fixed inset-0 scrim z-50 flex items-end p-0">
           <div className="bg-slate-800 rounded-t-2xl w-full max-h-[80vh] flex flex-col border-t border-slate-700">
             <div className="p-4 border-b border-slate-700">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-white font-semibold">
+                <p className="text-slate-50 font-semibold">
                   Add Food
                   {foods.length > 0 && <span className="text-green-400 text-sm ml-2">{foods.length} logged</span>}
                 </p>
                 <button
                   onClick={() => { setShowFoodPicker(false); setFoodSearch('') }}
-                  className="bg-green-500 text-white text-sm font-semibold px-4 py-1.5 rounded-xl"
+                  className="bg-green-500 text-oncolor text-sm font-semibold px-4 py-1.5 rounded-xl"
                 >
                   Done
                 </button>
@@ -382,7 +386,7 @@ export default function DailyLog() {
                     className="flex-1 text-left flex items-center justify-between py-3 px-3 bg-slate-700 hover:bg-slate-600 rounded-xl transition-colors min-w-0"
                   >
                     <div className="min-w-0">
-                      <p className="text-white text-sm font-medium truncate">
+                      <p className="text-slate-50 text-sm font-medium truncate">
                         {food.name}{food.custom && <span className="text-green-400 text-xs ml-1">·custom</span>}
                       </p>
                       <p className="text-slate-400 text-xs">{food.cal} kcal · P: {food.protein}g · C: {food.carbs}g · F: {food.fat}g</p>

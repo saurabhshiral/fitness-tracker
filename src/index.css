@@ -2,75 +2,177 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ------------------------------------------------------------------ *
+ * Palette
+ *
+ * Colours live as space-separated RGB triplets so Tailwind can inject an
+ * alpha channel — `bg-slate-800/50` keeps working. Swapping `.light` on
+ * <html> re-points every token at once.
+ *
+ * The neutral ramp deliberately INVERTS between themes: slate-900 is the
+ * page background in both, slate-50 is primary text in both. That's what
+ * lets every existing class carry over untouched.
+ * ------------------------------------------------------------------ */
+
+:root {
+  color-scheme: dark;
+
+  /* Neutrals — warm umber charcoal */
+  --c-slate-50:  243 238 227;   /* primary text  */
+  --c-slate-100: 229 223 209;
+  --c-slate-200: 207 199 180;
+  --c-slate-300: 184 175 154;   /* secondary text */
+  --c-slate-400: 147 139 118;   /* muted text     */
+  --c-slate-500: 107 100  84;
+  --c-slate-600:  68  62  48;
+  --c-slate-700:  46  42  32;   /* borders, buttons */
+  --c-slate-800:  34  31  24;   /* card surface     */
+  --c-slate-900:  23  21  15;   /* page background  */
+  --c-slate-950:  16  14  10;
+
+  --c-green-300: 168 188 156;
+  --c-green-400: 140 165 126;
+  --c-green-500: 113 138 100;
+  --c-green-600:  91 114  80;
+  --c-green-700:  72  90  64;
+
+  --c-orange-300: 224 165 133;
+  --c-orange-400: 206 138 102;
+  --c-orange-500: 184 113  80;
+  --c-orange-600: 156  92  62;
+
+  --c-yellow-400: 217 179 104;
+  --c-yellow-500: 197 154  76;
+  --c-yellow-600: 168 127  56;
+
+  --c-red-400: 198 125 114;
+  --c-red-500: 176 100  90;
+  --c-red-600: 150  79  70;
+
+  --c-blue-300: 163 188 206;
+  --c-blue-400: 133 163 184;
+  --c-blue-500: 106 136 158;
+
+  --c-purple-400: 167 150 176;
+  --c-purple-500: 140 122 150;
+
+  /* Ambient wash behind the page */
+  --wash: rgba(206, 138, 102, 0.055);
+
+  /* Card lighting: a lit top edge reads correctly on a dark ground */
+  --card-shadow:
+    inset 0 1px 0 0 rgba(243, 238, 227, 0.045),
+    0 1px 2px 0 rgba(0, 0, 0, 0.28);
+
+  --scrim: rgba(9, 8, 5, 0.82);
+}
+
+.light {
+  color-scheme: light;
+
+  /* Warm paper, not clinical white. Ramp runs the opposite direction. */
+  --c-slate-50:   44  38  28;   /* primary text  */
+  --c-slate-100:  60  53  40;
+  --c-slate-200:  76  68  53;
+  --c-slate-300:  94  85  68;   /* secondary text */
+  --c-slate-400: 124 114  94;   /* muted text     */
+  --c-slate-500: 166 154 131;
+  --c-slate-600: 212 201 180;
+  --c-slate-700: 233 225 209;   /* borders, buttons */
+  --c-slate-800: 255 253 249;   /* card surface     */
+  --c-slate-900: 247 242 233;   /* page background  */
+  --c-slate-950: 255 255 255;
+
+  /* Accents darken so they stay legible against paper */
+  --c-green-300: 122 148 106;
+  --c-green-400:  88 112  70;
+  --c-green-500:  72  93  57;
+  --c-green-600:  58  76  46;
+  --c-green-700:  46  60  36;
+
+  --c-orange-300: 194 113  72;
+  --c-orange-400: 166  86  49;
+  --c-orange-500: 146  72  38;
+  --c-orange-600: 122  58  30;
+
+  --c-yellow-400: 138 103  26;
+  --c-yellow-500: 119  88  20;
+  --c-yellow-600: 100  73  16;
+
+  --c-red-400: 166  70  58;
+  --c-red-500: 144  58  48;
+  --c-red-600: 120  46  38;
+
+  --c-blue-300:  90 126 154;
+  --c-blue-400:  70 106 134;
+  --c-blue-500:  56  88 114;
+
+  --c-purple-400: 120  98 132;
+  --c-purple-500: 100  80 112;
+
+  --wash: rgba(166, 86, 49, 0.045);
+
+  /* On paper a card is defined by its shadow, not a lit edge */
+  --card-shadow:
+    0 1px 2px 0 rgba(74, 60, 40, 0.07),
+    0 2px 6px -1px rgba(74, 60, 40, 0.05);
+
+  --scrim: rgba(44, 38, 28, 0.55);
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
   box-sizing: border-box;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   @apply bg-slate-900 text-slate-50 min-h-screen antialiased;
-  /* A faint warm wash from the top stops the background reading as flat
-     #000-ish fill — real interfaces almost always have some depth here. */
-  background-image:
-    radial-gradient(120% 60% at 50% 0%, rgba(206, 138, 102, 0.055) 0%, transparent 62%);
+  background-image: radial-gradient(120% 60% at 50% 0%, var(--wash) 0%, transparent 62%);
   background-attachment: fixed;
   overscroll-behavior: none;
-  font-feature-settings: 'cv02', 'cv03', 'cv04';
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Headings set tighter than default — untouched tracking on large text is a
-   giveaway that type was never actually adjusted. */
-h1, h2, h3 {
-  @apply tracking-tightest;
-}
+h1, h2, h3 { @apply tracking-tightest; }
 
-/* Numbers in stats should never shift width as they tick up */
-.tabular, .tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
+.tabular, .tabular-nums { font-variant-numeric: tabular-nums; }
 
 input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-}
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
-/* Date/time pickers default to a black glyph that vanishes on dark ground */
+/* The native date glyph is a black square; invert it only on dark */
 input[type=date]::-webkit-calendar-picker-indicator {
   filter: invert(0.75) sepia(0.2);
   cursor: pointer;
+}
+.light input[type=date]::-webkit-calendar-picker-indicator {
+  filter: invert(0.35) sepia(0.15);
 }
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { @apply bg-slate-900; }
 ::-webkit-scrollbar-thumb { @apply bg-slate-600 rounded; }
 
-::selection {
-  background: rgba(206, 138, 102, 0.28);
-}
+::selection { background: rgb(var(--c-orange-400) / 0.28); }
 
-.page {
-  @apply pb-28 px-4 pt-5 max-w-lg mx-auto;
-}
+.page { @apply pb-28 px-4 pt-5 max-w-lg mx-auto; }
 
-/* Cards carry a hairline top highlight, the way a lit surface actually
-   behaves. Flat 1px borders on every side is the generated-UI default. */
 .card {
   @apply bg-slate-800 rounded-2xl p-4 border border-slate-700/70;
-  box-shadow:
-    inset 0 1px 0 0 rgba(243, 238, 227, 0.045),
-    0 1px 2px 0 rgba(0, 0, 0, 0.28);
+  box-shadow: var(--card-shadow);
 }
 
 .card-quiet {
   @apply bg-slate-800/50 rounded-2xl p-4 border border-slate-700/40;
 }
 
+/* Modal backdrop — reads as a scrim in both themes */
+.scrim { background: var(--scrim); }
+
 .btn-primary {
-  @apply bg-orange-500 hover:bg-orange-400 active:bg-orange-600 text-slate-900
+  @apply bg-orange-500 hover:bg-orange-400 active:bg-orange-600 text-oncolor
          font-semibold py-3 px-4 rounded-xl transition-all duration-200 active:scale-[0.98];
 }
 
@@ -85,8 +187,6 @@ input[type=date]::-webkit-calendar-picker-indicator {
          focus:ring-orange-400/15 placeholder-slate-500 transition-colors;
 }
 
-/* Section label above a group — small caps, wide tracking, low contrast.
-   Carries hierarchy without adding another colour. */
 .eyebrow {
   @apply text-slate-500 text-[11px] font-semibold uppercase tracking-[0.12em];
 }

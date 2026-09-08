@@ -5,6 +5,7 @@ import { WORKOUT_PLAN, PROGRAM_START, STARTING_STATS } from '../data/fitnessPlan
 import { targetsFor, dayTypeFor } from '../lib/coach'
 import WeeklyCheckIn from '../components/WeeklyCheckIn'
 import Icon from '../components/Icon'
+import { useTheme } from '../hooks/useTheme'
 
 function StatCard({ label, value, unit, valueColor = 'text-slate-50', sub, icon }) {
   return (
@@ -37,6 +38,7 @@ export default function Dashboard() {
   const [bodyStats] = useStorage('fitness_body_stats', [STARTING_STATS])
   const [workoutLogs] = useStorage('fitness_workout_logs', [])
   const [settings, setSettings] = useSettings()
+  const { resolved, setTheme } = useTheme()
 
   const todayLog = dailyLogs.find(l => l.date === currentDate) || {}
   const latestStat = bodyStats[bodyStats.length - 1] || STARTING_STATS
@@ -79,15 +81,24 @@ export default function Dashboard() {
           <p className="text-slate-400 text-sm">
             {dayNames[dow]}, {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
           </p>
-          <h1 className="text-2xl font-bold text-white">Good {greeting}, Saurabh</h1>
+          <h1 className="text-2xl font-bold text-slate-50">Good {greeting}, Saurabh</h1>
         </div>
-        <Link
-          to="/settings"
-          className="flex-shrink-0 w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-100 hover:border-slate-600 transition-colors"
-          aria-label="Settings"
-        >
-          <Icon name="settings" size={19} />
-        </Link>
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={() => setTheme(resolved === 'light' ? 'dark' : 'light')}
+            className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-orange-400 hover:border-slate-600 transition-colors"
+            aria-label={resolved === 'light' ? 'Switch to night mode' : 'Switch to day mode'}
+          >
+            <Icon name={resolved === 'light' ? 'moon' : 'sun'} size={18} />
+          </button>
+          <Link
+            to="/settings"
+            className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-100 hover:border-slate-600 transition-colors"
+            aria-label="Settings"
+          >
+            <Icon name="settings" size={19} />
+          </Link>
+        </div>
       </div>
 
       <WeeklyCheckIn
@@ -111,11 +122,11 @@ export default function Dashboard() {
           <div className="grid grid-cols-4 gap-2 text-center mb-4">
             <div>
               <p className="text-slate-400 text-xs">Sessions</p>
-              <p className="text-white font-bold">{totalSessions}</p>
+              <p className="text-slate-50 font-bold">{totalSessions}</p>
             </div>
             <div>
               <p className="text-slate-400 text-xs">Tonnage</p>
-              <p className="text-white font-bold text-sm">{(totalVolume / 1000).toFixed(0)}<span className="text-xs font-normal text-slate-400">t</span></p>
+              <p className="text-slate-50 font-bold text-sm">{(totalVolume / 1000).toFixed(0)}<span className="text-xs font-normal text-slate-400">t</span></p>
             </div>
             <div>
               <p className="text-slate-400 text-xs">Weight Δ</p>

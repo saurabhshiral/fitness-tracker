@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale, LinearScale, PointElement, LineElement,
@@ -8,26 +8,45 @@ import { Line } from 'react-chartjs-2'
 import { useStorage, today, formatDate, exportData, importData } from '../hooks/useStorage'
 import { STARTING_STATS } from '../data/fitnessPlan'
 import { supabase, signOut } from '../lib/supabase'
+import { useTheme, paletteColor } from '../hooks/useTheme'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
-const CHART_OPTS = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false }, tooltip: { mode: 'index' } },
-  scales: {
-    x: { ticks: { color: '#938B76', font: { size: 11 } }, grid: { color: '#2E2A20' } },
-    y: { ticks: { color: '#938B76', font: { size: 11 } }, grid: { color: '#2E2A20' } },
-  },
+/* Chart.js paints to canvas, so it can't inherit CSS classes — axis and grid
+   colours have to be read out of the palette whenever the theme flips. */
+function chartOpts() {
+  const tick = paletteColor('slate-400')
+  const grid = paletteColor('slate-700')
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        mode: 'index',
+        backgroundColor: paletteColor('slate-800'),
+        titleColor: paletteColor('slate-50'),
+        bodyColor: paletteColor('slate-300'),
+        borderColor: paletteColor('slate-600'),
+        borderWidth: 1,
+        padding: 10,
+        displayColors: false,
+      },
+    },
+    scales: {
+      x: { ticks: { color: tick, font: { size: 11 } }, grid: { color: grid } },
+      y: { ticks: { color: tick, font: { size: 11 } }, grid: { color: grid } },
+    },
+  }
 }
 
-function makeLineData(labels, data, color) {
+function makeLineData(labels, data, color, fill) {
   return {
     labels,
     datasets: [{
       data,
       borderColor: color,
-      backgroundColor: color + '22',
+      backgroundColor: fill || 'transparent',
       fill: true,
       tension: 0.3,
       pointBackgroundColor: color,
@@ -37,22 +56,33 @@ function makeLineData(labels, data, color) {
   }
 }
 
-function Chart({ title, labels, data, color, unit }) {
+/** Recomputes chart options whenever the theme flips. */
+function useChartOpts() {
+  const { resolved } = useTheme()
+  return useMemo(() => chartOpts(), [resolved])
+}
+
+function Chart({ title, labels, data, token, unit }) {
+  const { resolved } = useTheme()
+  const opts = useChartOpts()
+  const color = useMemo(() => paletteColor(token), [token, resolved])
+  const fill  = useMemo(() => paletteColor(token, 0.13), [token, resolved])
+
   if (!data.length) return (
     <div className="card mb-4">
-      <p className="text-white font-semibold mb-3">{title}</p>
-      <p className="text-slate-500 text-sm text-center py-8">No data yet — log your first measurement!</p>
+      <p className="text-slate-50 font-semibold mb-3">{title}</p>
+      <p className="text-slate-500 text-sm text-center py-8">No data yet — log your first measurement</p>
     </div>
   )
 
   return (
     <div className="card mb-4">
       <div className="flex justify-between items-baseline mb-3">
-        <p className="text-white font-semibold">{title}</p>
+        <p className="text-slate-50 font-semibold">{title}</p>
         <p className="text-slate-400 text-xs">{unit}</p>
       </div>
       <div className="h-40">
-        <Line data={makeLineData(labels, data, color)} options={CHART_OPTS} />
+        <Line data={makeLineData(labels, data, color, fill)} options={opts} />
       </div>
     </div>
   )
@@ -78,12 +108,13 @@ function collectExercises(logs) {
 function StrengthProgress({ workoutLogs }) {
   const exercises = collectExercises(workoutLogs)
   const [sel, setSel] = useState(null)
+  const opts = useChartOpts()
   const active = exercises.find(e => e.id === sel) || exercises[0]
 
   if (!exercises.length) {
     return (
       <div className="card mb-4">
-        <p className="text-white font-semibold mb-3">Strength Progression</p>
+        <p className="text-slate-50 font-semibold mb-3">Strength Progression</p>
         <p className="text-slate-500 text-sm text-center py-8">
           Log a few workouts with weights and your lifts will chart here.
         </p>
@@ -99,14 +130,14 @@ function StrengthProgress({ workoutLogs }) {
   return (
     <div className="card mb-4">
       <div className="flex justify-between items-baseline mb-3">
-        <p className="text-white font-semibold">Strength Progression</p>
+        <p className="text-slate-50 font-semibold">Strength Progression</p>
         <p className="text-slate-400 text-xs">top set, kg</p>
       </div>
 
       <select
         value={active.id}
         onChange={e => setSel(e.target.value)}
-        className="w-full bg-slate-700 text-white text-sm rounded-xl px-3 py-2.5 mb-3 outline-none border border-slate-600"
+        className="w-full bg-slate-700 text-slate-50 text-sm rounded-xl px-3 py-2.5 mb-3 outline-none border border-slate-600"
       >
         {exercises.map(e => (
           <option key={e.id} value={e.id}>{e.name}</option>
@@ -116,17 +147,17 @@ function StrengthProgress({ workoutLogs }) {
       <div className="grid grid-cols-3 gap-2 mb-3 text-center">
         <div>
           <p className="text-slate-400 text-xs">Best</p>
-          <p className="text-white font-bold">{best}<span className="text-xs font-normal text-slate-400">kg</span></p>
+          <p className="text-slate-50 font-bold">{best}<span className="text-xs font-normal text-slate-400">kg</span></p>
         </div>
         <div>
           <p className="text-slate-400 text-xs">Change</p>
-          <p className={`font-bold ${gain > 0 ? 'text-green-400' : gain < 0 ? 'text-red-400' : 'text-white'}`}>
+          <p className={`font-bold ${gain > 0 ? 'text-green-400' : gain < 0 ? 'text-red-400' : 'text-slate-50'}`}>
             {gain > 0 ? '+' : ''}{gain}<span className="text-xs font-normal text-slate-400">kg</span>
           </p>
         </div>
         <div>
           <p className="text-slate-400 text-xs">Sessions</p>
-          <p className="text-white font-bold">{active.points.length}</p>
+          <p className="text-slate-50 font-bold">{active.points.length}</p>
         </div>
       </div>
 
@@ -140,9 +171,10 @@ function StrengthProgress({ workoutLogs }) {
             data={makeLineData(
               active.points.map(p => formatDate(p.date)),
               active.points.map(p => p.top),
-              '#D9B368'
+              paletteColor('yellow-400'),
+              paletteColor('yellow-400', 0.13)
             )}
-            options={CHART_OPTS}
+            options={opts}
           />
         </div>
       )}
@@ -174,7 +206,7 @@ function WeeklySummary({ workoutLogs, dailyLogs }) {
 
   return (
     <div className="card mb-4">
-      <p className="text-white font-semibold mb-3">This Week</p>
+      <p className="text-slate-50 font-semibold mb-3">This Week</p>
       <div className="flex gap-1.5 mb-4">
         {weekDates.map((d, i) => {
           const hit = workoutLogs.some(l => l.date === d)
@@ -198,19 +230,19 @@ function WeeklySummary({ workoutLogs, dailyLogs }) {
       <div className="grid grid-cols-4 gap-2 text-center">
         <div>
           <p className="text-slate-400 text-xs">Sessions</p>
-          <p className={`font-bold ${sessions >= 5 ? 'text-green-400' : 'text-white'}`}>{sessions}<span className="text-xs font-normal text-slate-400">/5</span></p>
+          <p className={`font-bold ${sessions >= 5 ? 'text-green-400' : 'text-slate-50'}`}>{sessions}<span className="text-xs font-normal text-slate-400">/5</span></p>
         </div>
         <div>
           <p className="text-slate-400 text-xs">Volume</p>
-          <p className="text-white font-bold text-sm">{(volume / 1000).toFixed(1)}<span className="text-xs font-normal text-slate-400">t</span></p>
+          <p className="text-slate-50 font-bold text-sm">{(volume / 1000).toFixed(1)}<span className="text-xs font-normal text-slate-400">t</span></p>
         </div>
         <div>
           <p className="text-slate-400 text-xs">Avg cal</p>
-          <p className="text-white font-bold text-sm">{avg(weekDaily, 'calories') || '—'}</p>
+          <p className="text-slate-50 font-bold text-sm">{avg(weekDaily, 'calories') || '—'}</p>
         </div>
         <div>
           <p className="text-slate-400 text-xs">Avg protein</p>
-          <p className={`font-bold text-sm ${avg(weekDaily, 'protein') >= 150 ? 'text-green-400' : 'text-white'}`}>
+          <p className={`font-bold text-sm ${avg(weekDaily, 'protein') >= 150 ? 'text-green-400' : 'text-slate-50'}`}>
             {avg(weekDaily, 'protein') || '—'}<span className="text-xs font-normal text-slate-400">g</span>
           </p>
         </div>
@@ -278,10 +310,10 @@ export default function Progress() {
   return (
     <div className="page">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-white">Progress</h1>
+        <h1 className="text-xl font-bold text-slate-50">Progress</h1>
         <button
           onClick={() => setShowAddStats(true)}
-          className="bg-green-500 text-white text-sm font-semibold px-3 py-1.5 rounded-xl"
+          className="bg-green-500 text-oncolor text-sm font-semibold px-3 py-1.5 rounded-xl"
         >
           + Log Stats
         </button>
@@ -304,7 +336,7 @@ export default function Progress() {
             return (
               <div key={key} className="text-center">
                 <p className="text-slate-400 text-xs">{label}</p>
-                <p className="text-white font-bold">{latest[key]}<span className="text-xs font-normal text-slate-400">{unit}</span></p>
+                <p className="text-slate-50 font-bold">{latest[key]}<span className="text-xs font-normal text-slate-400">{unit}</span></p>
                 {bodyStats.length > 1 && (
                   <p className={`text-xs ${isGood ? 'text-green-400' : 'text-red-400'}`}>
                     {d.sign}{d.val}
@@ -319,15 +351,15 @@ export default function Progress() {
       <WeeklySummary workoutLogs={workoutLogs} dailyLogs={dailyLogs} />
 
       {/* Charts */}
-      <Chart title="Body Weight" labels={labels} data={weights} color="#8CA57E" unit="kg" />
-      <Chart title="Body Fat %" labels={labels} data={fats} color="#CE8A66" unit="%" />
-      <Chart title="Waist" labels={labels} data={waists} color="#85A3B8" unit="inches" />
+      <Chart title="Body Weight" labels={labels} data={weights} token="green-400" unit="kg" />
+      <Chart title="Body Fat %" labels={labels} data={fats} token="orange-400" unit="%" />
+      <Chart title="Waist" labels={labels} data={waists} token="blue-400" unit="inches" />
 
       <StrengthProgress workoutLogs={workoutLogs} />
 
       {/* Recent workouts */}
       <div className="card mb-4">
-        <p className="text-white font-semibold mb-3">Recent Workouts</p>
+        <p className="text-slate-50 font-semibold mb-3">Recent Workouts</p>
         {recentWorkouts.length === 0 ? (
           <p className="text-slate-500 text-sm text-center py-4">No workouts logged yet</p>
         ) : (
@@ -339,7 +371,7 @@ export default function Progress() {
               return (
                 <div key={log.date} className="flex justify-between items-center gap-2 py-2 border-b border-slate-700 last:border-0">
                   <div className="min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{log.workoutName} — {log.day}</p>
+                    <p className="text-slate-50 text-sm font-medium truncate">{log.workoutName} — {log.day}</p>
                     <p className="text-slate-400 text-xs">
                       {formatDate(log.date)}
                       {volume > 0 && ` · ${volume.toLocaleString()} kg volume`}
@@ -365,7 +397,7 @@ export default function Progress() {
 
       {/* Backup / Restore */}
       <div className="card">
-        <p className="text-white font-semibold mb-3">Backup & Restore</p>
+        <p className="text-slate-50 font-semibold mb-3">Backup & Restore</p>
         <div className="flex gap-2">
           <button onClick={exportData} className="btn-secondary flex-1 text-sm py-2.5">
             Export JSON
@@ -392,9 +424,9 @@ export default function Progress() {
 
       {/* Delete workout confirmation */}
       {confirmDelete && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 scrim flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-xs border border-slate-700 text-center">
-            <p className="text-white font-bold mb-2">Delete workout?</p>
+            <p className="text-slate-50 font-bold mb-2">Delete workout?</p>
             <p className="text-slate-400 text-sm mb-5">
               The session logged on {formatDate(confirmDelete)} will be removed.
             </p>
@@ -405,7 +437,7 @@ export default function Progress() {
                   setWorkoutLogs(workoutLogs.filter(l => l.date !== confirmDelete))
                   setConfirmDelete(null)
                 }}
-                className="flex-1 bg-red-500 hover:bg-red-400 text-white font-semibold py-2.5 rounded-xl text-sm"
+                className="flex-1 bg-red-500 hover:bg-red-400 text-oncolor font-semibold py-2.5 rounded-xl text-sm"
               >
                 Delete
               </button>
@@ -416,9 +448,9 @@ export default function Progress() {
 
       {/* Add Stats Modal */}
       {showAddStats && (
-        <div className="fixed inset-0 bg-black/80 z-50 overflow-y-auto p-4 flex items-start justify-center pt-8">
+        <div className="fixed inset-0 scrim z-50 overflow-y-auto p-4 flex items-start justify-center pt-8">
           <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-sm border border-slate-700">
-            <p className="text-white font-bold text-lg mb-4">Log Body Stats</p>
+            <p className="text-slate-50 font-bold text-lg mb-4">Log Body Stats</p>
             <form onSubmit={handleAddStats} className="space-y-3">
               <div>
                 <label className="text-slate-400 text-xs block mb-1">Date</label>

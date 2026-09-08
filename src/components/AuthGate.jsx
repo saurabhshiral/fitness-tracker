@@ -1,3 +1,4 @@
+import Icon from './Icon'
 import { useState, useEffect } from 'react'
 import { supabase, pullFromSupabase } from '../lib/supabase'
 
@@ -5,7 +6,7 @@ function Splash({ message }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       <div className="text-center">
-        <div className="text-5xl mb-4">💪</div>
+        <Icon name="dumbbell" size={40} strokeWidth={1.4} className="text-orange-400 mx-auto mb-4" />
         <p className="text-slate-400 text-sm">{message}</p>
       </div>
     </div>
@@ -138,15 +139,15 @@ export default function AuthGate({ children }) {
     <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">💪</div>
-          <h1 className="text-2xl font-bold text-white">Fitness Tracker</h1>
+          <Icon name="dumbbell" size={48} strokeWidth={1.4} className="text-orange-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-slate-50">Fitness Tracker</h1>
           <p className="text-slate-400 text-sm mt-1">Saurabh's personal training dashboard</p>
         </div>
 
         <div className="bg-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700/50">
           {phase === 'email' ? (
             <form onSubmit={sendOTP} className="space-y-4">
-              <p className="text-white font-semibold text-center text-lg">Sign In</p>
+              <p className="text-slate-50 font-semibold text-center text-lg">Sign In</p>
               <p className="text-slate-400 text-sm text-center">
                 Enter your email — we'll send a 6-digit code
               </p>
@@ -165,9 +166,9 @@ export default function AuthGate({ children }) {
             </form>
           ) : (
             <form onSubmit={verifyOTP} className="space-y-4">
-              <p className="text-white font-semibold text-center text-lg">Check Your Email</p>
+              <p className="text-slate-50 font-semibold text-center text-lg">Check Your Email</p>
               <p className="text-slate-400 text-sm text-center">
-                Code sent to <span className="text-white">{email}</span>
+                Code sent to <span className="text-slate-50">{email}</span>
               </p>
               <input
                 type="text"

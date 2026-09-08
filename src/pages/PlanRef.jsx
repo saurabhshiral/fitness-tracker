@@ -19,7 +19,7 @@ export default function PlanRef() {
 
   return (
     <div className="page">
-      <h1 className="text-xl font-bold text-white mb-4">12-Week Plan</h1>
+      <h1 className="text-xl font-bold text-slate-50 mb-4">12-Week Plan</h1>
 
       {/* Tab bar */}
       <div className="flex gap-1 bg-slate-800 rounded-xl p-1 mb-4">
@@ -28,7 +28,7 @@ export default function PlanRef() {
             key={t}
             onClick={() => setTab(t)}
             className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${
-              tab === t ? 'bg-green-500 text-white' : 'text-slate-400 hover:text-white'
+              tab === t ? 'bg-green-500 text-oncolor' : 'text-slate-400 hover:text-slate-50'
             }`}
           >
             {t}
@@ -49,7 +49,7 @@ export default function PlanRef() {
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${c.bg} ${c.text}`}>
                         {DAY_NAMES[dow]}
                       </span>
-                      <span className="text-white font-semibold">{w.name}</span>
+                      <span className="text-slate-50 font-semibold">{w.name}</span>
                     </div>
                     <span className="text-slate-400 text-xs">{w.duration}</span>
                   </div>
@@ -76,7 +76,7 @@ export default function PlanRef() {
             })}
           <div className="card border border-slate-700 text-center">
             <p className="text-slate-400 text-sm">Saturday & Sunday</p>
-            <p className="text-white font-semibold">🌴 Active Recovery</p>
+            <p className="text-slate-50 font-semibold">🌴 Active Recovery</p>
             <p className="text-slate-400 text-xs mt-1">Walk 20-30 min · 8,000+ steps · Stretch</p>
           </div>
         </div>
@@ -97,10 +97,10 @@ export default function PlanRef() {
             return (
               <div key={i} className={`card border ${isCurrent ? 'border-green-500/50 bg-green-500/5' : 'border-slate-700'}`}>
                 <div className="flex items-center gap-2 mb-2">
-                  {isCurrent && <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full font-semibold">CURRENT</span>}
+                  {isCurrent && <span className="text-xs bg-green-500 text-oncolor px-2 py-0.5 rounded-full font-semibold">CURRENT</span>}
                   <span className="text-slate-400 text-xs">Weeks {p.start}-{p.end}</span>
                 </div>
-                <p className="text-white font-bold text-lg mb-1">Phase {i + 1}: {p.name}</p>
+                <p className="text-slate-50 font-bold text-lg mb-1">Phase {i + 1}: {p.name}</p>
                 <p className="text-slate-300 text-sm">{p.description}</p>
 
                 {i === 0 && (
@@ -133,7 +133,7 @@ export default function PlanRef() {
 
           {/* Plateau prevention */}
           <div className="card">
-            <p className="text-white font-semibold mb-3">⚠️ Plateau Prevention</p>
+            <p className="text-slate-50 font-semibold mb-3">⚠️ Plateau Prevention</p>
             <div className="space-y-2 text-sm">
               {[
                 { week: 'Wk 1-4', rule: 'Stick to 1,950 cal. Do NOT drop calories.' },
@@ -155,7 +155,7 @@ export default function PlanRef() {
         <div className="space-y-3">
           {/* Targets */}
           <div className="card">
-            <p className="text-white font-semibold mb-2">Daily Targets</p>
+            <p className="text-slate-50 font-semibold mb-2">Daily Targets</p>
             <div className="grid grid-cols-2 gap-y-2 text-sm">
               {[
                 { label: 'Workout day', val: '1,950 kcal' },
@@ -167,7 +167,7 @@ export default function PlanRef() {
               ].map(({ label, val }) => (
                 <div key={label}>
                   <p className="text-slate-400 text-xs">{label}</p>
-                  <p className="text-white font-semibold">{val}</p>
+                  <p className="text-slate-50 font-semibold">{val}</p>
                 </div>
               ))}
             </div>
@@ -188,7 +188,7 @@ export default function PlanRef() {
                 <p className="text-green-400 text-xs font-mono">{meal.time}</p>
                 <p className="text-slate-400 text-xs">{meal.cal}</p>
               </div>
-              <p className="text-white font-semibold">{meal.name}</p>
+              <p className="text-slate-50 font-semibold">{meal.name}</p>
               <p className="text-slate-300 text-sm mt-1">{meal.items}</p>
             </div>
           ))}
@@ -213,7 +213,7 @@ export default function PlanRef() {
 
           {/* Protein table */}
           <div className="card">
-            <p className="text-white font-semibold mb-3">Top Protein Sources</p>
+            <p className="text-slate-50 font-semibold mb-3">Top Protein Sources</p>
             <div className="space-y-1.5">
               {COMMON_FOODS.filter(f => f.protein >= 6).map(f => (
                 <div key={f.name} className="flex items-center justify-between text-sm">
@@ -231,7 +231,7 @@ export default function PlanRef() {
         <div className="space-y-3">
           {/* 5 non-negotiables */}
           <div className="card">
-            <p className="text-white font-bold mb-3">The 5 Non-Negotiables</p>
+            <p className="text-slate-50 font-bold mb-3">The 5 Non-Negotiables</p>
             {[
               { emoji: '🥩', rule: '150g protein daily', why: 'Without this, training doesn\'t build anything' },
               { emoji: '👟', rule: '8,000 steps minimum', why: 'Doubles daily calorie burn vs sitting' },
@@ -242,7 +242,7 @@ export default function PlanRef() {
               <div key={rule} className="flex gap-3 mb-3">
                 <span className="text-2xl">{emoji}</span>
                 <div>
-                  <p className="text-white font-semibold text-sm">{rule}</p>
+                  <p className="text-slate-50 font-semibold text-sm">{rule}</p>
                   <p className="text-slate-400 text-xs">{why}</p>
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default function PlanRef() {
 
           {/* Training rules */}
           <div className="card">
-            <p className="text-white font-semibold mb-3">Training Rules</p>
+            <p className="text-slate-50 font-semibold mb-3">Training Rules</p>
             {[
               { rule: 'Rest between sets', val: '60-90s isolation · 2-3 min compound' },
               { rule: 'Progressive overload', val: 'Add 1-2 kg when 12 reps easy × 2 sessions' },
@@ -263,7 +263,7 @@ export default function PlanRef() {
               <div key={rule} className="flex gap-3 mb-2.5">
                 <div className="w-2 h-2 rounded-full bg-green-400 mt-1.5 flex-shrink-0" />
                 <div>
-                  <p className="text-white text-sm font-medium">{rule}</p>
+                  <p className="text-slate-50 text-sm font-medium">{rule}</p>
                   <p className="text-slate-400 text-xs">{val}</p>
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default function PlanRef() {
 
           {/* IT desk strategies */}
           <div className="card">
-            <p className="text-white font-semibold mb-3">💻 IT Desk Worker Rules</p>
+            <p className="text-slate-50 font-semibold mb-3">💻 IT Desk Worker Rules</p>
             {[
               'Every time you finish a 500ml bottle: stand up, refill, do 10 squats',
               'No food after 8 PM — late-night eating is #1 reason for belly fat in IT workers',
@@ -290,7 +290,7 @@ export default function PlanRef() {
 
           {/* 12-week expected results */}
           <div className="card border border-green-500/20">
-            <p className="text-white font-bold mb-3">Week 12 Expected Results</p>
+            <p className="text-slate-50 font-bold mb-3">Week 12 Expected Results</p>
             <p className="text-slate-400 text-xs mb-2 font-semibold">WHAT WILL VISIBLY CHANGE</p>
             {[
               'Waist: 33.2" → ~31-31.5"',
@@ -310,7 +310,7 @@ export default function PlanRef() {
           {/* Supplement */}
           <div className="card border border-yellow-400/20">
             <p className="text-yellow-400 font-semibold mb-1">💊 One Supplement Worth Adding</p>
-            <p className="text-white font-semibold">Vitamin D3 + K2</p>
+            <p className="text-slate-50 font-semibold">Vitamin D3 + K2</p>
             <p className="text-slate-300 text-sm mt-1">IT workers sitting indoors are almost universally deficient. Affects testosterone, muscle recovery, and mood. 2,000-4,000 IU daily with a fat-containing meal.</p>
           </div>
         </div>

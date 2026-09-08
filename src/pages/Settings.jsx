@@ -7,11 +7,13 @@ import {
   ACTIVITY_LEVELS, GOALS, bmr, tdee, baseCalories, targetsFor, dayOffsets, leanMass,
 } from '../lib/coach'
 import { supabase, signOut } from '../lib/supabase'
+import { useTheme, THEME_OPTIONS } from '../hooks/useTheme'
+import Icon from '../components/Icon'
 
 function Section({ title, sub, children }) {
   return (
     <div className="card mb-4">
-      <p className="text-white font-semibold">{title}</p>
+      <p className="text-slate-50 font-semibold">{title}</p>
       {sub && <p className="text-slate-400 text-xs mt-0.5 mb-3">{sub}</p>}
       <div className={sub ? '' : 'mt-3'}>{children}</div>
     </div>
@@ -32,6 +34,7 @@ export default function Settings() {
   const [settings, setSettings] = useSettings()
   const [bodyStats] = useStorage('fitness_body_stats', [STARTING_STATS])
   const [confirmReset, setConfirmReset] = useState(false)
+  const { theme, setTheme, resolved } = useTheme()
 
   const latestStat = bodyStats[bodyStats.length - 1] || STARTING_STATS
   const set = (k, v) => setSettings(s => ({ ...DEFAULT_SETTINGS, ...s, [k]: v }))
@@ -58,9 +61,39 @@ export default function Settings() {
   return (
     <div className="page">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-white">Settings</h1>
-        <Link to="/" className="text-slate-400 text-sm">← Back</Link>
+        <h1 className="text-xl font-bold text-slate-50">Settings</h1>
+        <Link to="/" className="flex items-center gap-1.5 text-slate-400 hover:text-slate-100 text-sm transition-colors">
+          <Icon name="arrow" size={14} className="rotate-180" /> Back
+        </Link>
       </div>
+
+      {/* Appearance */}
+      <Section title="Appearance" sub="Auto follows your device's light/dark setting and switches with it.">
+        <div className="grid grid-cols-3 gap-2">
+          {THEME_OPTIONS.map(opt => {
+            const active = theme === opt.value
+            return (
+              <button
+                key={opt.value}
+                onClick={() => setTheme(opt.value)}
+                className={`flex flex-col items-center gap-1.5 py-3 rounded-xl border transition-colors ${
+                  active
+                    ? 'bg-orange-400/12 border-orange-400/45 text-orange-400'
+                    : 'bg-slate-700/40 border-transparent text-slate-400 hover:bg-slate-700'
+                }`}
+              >
+                <Icon name={opt.icon} size={19} strokeWidth={active ? 2 : 1.7} />
+                <span className="text-xs font-medium">{opt.label}</span>
+              </button>
+            )
+          })}
+        </div>
+        {theme === 'system' && (
+          <p className="text-slate-500 text-xs mt-2.5 text-center">
+            Currently showing {resolved === 'light' ? 'day' : 'night'} mode
+          </p>
+        )}
+      </Section>
 
       {/* Live calculation summary */}
       <div className="card mb-4 border-green-500/30 bg-green-500/5">
@@ -68,17 +101,17 @@ export default function Settings() {
         <div className="grid grid-cols-3 gap-2 text-center mb-3">
           <div>
             <p className="text-slate-400 text-xs">Lean mass</p>
-            <p className="text-white font-bold">
+            <p className="text-slate-50 font-bold">
               {lbm ? lbm.toFixed(1) : '—'}<span className="text-xs font-normal text-slate-400">kg</span>
             </p>
           </div>
           <div>
             <p className="text-slate-400 text-xs">BMR</p>
-            <p className="text-white font-bold">{restingRate || '—'}</p>
+            <p className="text-slate-50 font-bold">{restingRate || '—'}</p>
           </div>
           <div>
             <p className="text-slate-400 text-xs">TDEE</p>
-            <p className="text-white font-bold">{total || '—'}</p>
+            <p className="text-slate-50 font-bold">{total || '—'}</p>
           </div>
         </div>
         {!latestStat.bodyFat && (
@@ -87,7 +120,7 @@ export default function Settings() {
           </p>
         )}
         <p className="text-slate-400 text-xs">
-          Weekly average target: <span className="text-white font-semibold">{base || '—'} kcal/day</span>
+          Weekly average target: <span className="text-slate-50 font-semibold">{base || '—'} kcal/day</span>
           {settings.calorieAdjustment !== 0 && (
             <span className={settings.calorieAdjustment > 0 ? 'text-green-400' : 'text-orange-400'}>
               {' '}(includes {settings.calorieAdjustment > 0 ? '+' : ''}{settings.calorieAdjustment} from check-ins)
@@ -102,7 +135,7 @@ export default function Settings() {
           {dayTargets.map(d => (
             <div key={d.type} className="flex items-center justify-between bg-slate-700/40 rounded-xl px-3 py-2.5">
               <div>
-                <p className="text-white text-sm font-medium capitalize">{d.type} day</p>
+                <p className="text-slate-50 text-sm font-medium capitalize">{d.type} day</p>
                 <p className="text-slate-400 text-xs">
                   P {d.protein}g · C {d.carbs}g · F {d.fat}g
                 </p>
@@ -131,7 +164,7 @@ export default function Settings() {
                   : 'bg-slate-700/40 border-transparent hover:bg-slate-700'
               }`}
             >
-              <p className={`text-sm font-medium ${settings.goal === k ? 'text-green-400' : 'text-white'}`}>
+              <p className={`text-sm font-medium ${settings.goal === k ? 'text-green-400' : 'text-slate-50'}`}>
                 {g.label}
               </p>
               <p className="text-slate-400 text-xs mt-0.5">
@@ -151,7 +184,7 @@ export default function Settings() {
               key={mode}
               onClick={() => set('calorieMode', mode)}
               className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                settings.calorieMode === mode ? 'bg-green-500 text-white' : 'bg-slate-700 text-slate-300'
+                settings.calorieMode === mode ? 'bg-green-500 text-oncolor' : 'bg-slate-700 text-slate-300'
               }`}
             >
               {label}
@@ -295,7 +328,7 @@ export default function Settings() {
 
       {/* Danger zone */}
       <div className="card border-red-500/20">
-        <p className="text-white font-semibold mb-3">Data</p>
+        <p className="text-slate-50 font-semibold mb-3">Data</p>
         {confirmReset ? (
           <div className="text-center">
             <p className="text-slate-300 text-sm mb-1">Delete everything?</p>
@@ -304,7 +337,7 @@ export default function Settings() {
             </p>
             <div className="flex gap-2">
               <button onClick={() => setConfirmReset(false)} className="btn-secondary flex-1 py-2.5 text-sm">Cancel</button>
-              <button onClick={resetAll} className="flex-1 bg-red-500 hover:bg-red-400 text-white font-semibold py-2.5 rounded-xl text-sm">
+              <button onClick={resetAll} className="flex-1 bg-red-500 hover:bg-red-400 text-oncolor font-semibold py-2.5 rounded-xl text-sm">
                 Delete all
               </button>
             </div>

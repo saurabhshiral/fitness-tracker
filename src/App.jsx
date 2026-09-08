@@ -1,5 +1,6 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { supabase } from './lib/supabase'
+import { ThemeProvider } from './hooks/useTheme'
 import AuthGate from './components/AuthGate'
 import PasswordGate from './components/PasswordGate'
 import Nav from './components/Nav'
@@ -15,8 +16,9 @@ const Gate = supabase ? AuthGate : PasswordGate
 
 export default function App() {
   return (
-    <HashRouter>
-      <Gate>
+    <ThemeProvider>
+      <HashRouter>
+        <Gate>
         <div className="min-h-screen bg-slate-900">
           <Routes>
             <Route path="/"         element={<Dashboard />} />
@@ -28,7 +30,8 @@ export default function App() {
           </Routes>
           <Nav />
         </div>
-      </Gate>
-    </HashRouter>
+        </Gate>
+      </HashRouter>
+    </ThemeProvider>
   )
 }

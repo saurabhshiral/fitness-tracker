@@ -70,7 +70,7 @@ export default function RestTimer({ seconds, exerciseName, onDone }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 scrim flex items-center justify-center z-50 p-4"
       onClick={onDone}
     >
       <div
@@ -78,16 +78,16 @@ export default function RestTimer({ seconds, exerciseName, onDone }) {
         onClick={e => e.stopPropagation()}
       >
         <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Rest after</p>
-        <p className="text-white font-semibold text-sm mb-6 truncate">{exerciseName}</p>
+        <p className="text-slate-50 font-semibold text-sm mb-6 truncate">{exerciseName}</p>
 
         <div className="relative w-36 h-36 mx-auto mb-6">
           <svg className="w-36 h-36 -rotate-90" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="54" fill="none" stroke="#1e293b" strokeWidth="6" />
+            <circle cx="60" cy="60" r="54" fill="none" strokeWidth="6" className="stroke-slate-700" />
             <circle
               cx="60" cy="60" r="54"
               fill="none"
-              stroke={done ? '#22c55e' : '#f97316'}
               strokeWidth="6"
+              className={done ? 'stroke-green-400' : 'stroke-orange-400'}
               strokeDasharray={circumference}
               strokeDashoffset={circumference * (1 - progress)}
               strokeLinecap="round"
@@ -98,14 +98,14 @@ export default function RestTimer({ seconds, exerciseName, onDone }) {
             {done ? (
               <span className="text-3xl font-bold text-green-400">GO!</span>
             ) : (
-              <span className="text-5xl font-bold text-white tabular-nums">{label}</span>
+              <span className="text-5xl font-bold text-slate-50 tabular-nums">{label}</span>
             )}
           </div>
         </div>
 
         {done ? (
           <button onClick={onDone} className="btn-primary w-full">
-            Next Set ✓
+            Next set
           </button>
         ) : (
           <>
@@ -113,7 +113,7 @@ export default function RestTimer({ seconds, exerciseName, onDone }) {
               <button onClick={() => addTime(-15)} className="btn-secondary flex-1 text-sm py-2">−15s</button>
               <button onClick={() => addTime(30)} className="btn-secondary flex-1 text-sm py-2">+30s</button>
             </div>
-            <button onClick={onDone} className="w-full text-slate-400 text-sm py-2 hover:text-white">
+            <button onClick={onDone} className="w-full text-slate-400 text-sm py-2 hover:text-slate-50">
               Skip rest
             </button>
           </>
