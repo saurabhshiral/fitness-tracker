@@ -7,6 +7,7 @@ import {
 import { Line } from 'react-chartjs-2'
 import { useStorage, today, formatDate, exportData, importData } from '../hooks/useStorage'
 import { STARTING_STATS } from '../data/fitnessPlan'
+import { supabase, signOut } from '../lib/supabase'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
@@ -195,9 +196,18 @@ export default function Progress() {
         </div>
         {importError && <p className="text-red-400 text-xs mt-2">{importError}</p>}
         <p className="text-slate-500 text-xs mt-2 text-center">
-          All data is local. Export weekly to avoid loss.
+          {supabase ? 'Auto-synced across devices via Supabase.' : 'All data is local. Export weekly to avoid loss.'}
         </p>
       </div>
+
+      {supabase && (
+        <button
+          onClick={signOut}
+          className="w-full mt-3 py-3 rounded-2xl text-slate-500 hover:text-red-400 text-sm transition-colors"
+        >
+          Sign out
+        </button>
+      )}
 
       {/* Add Stats Modal */}
       {showAddStats && (

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { pushToSupabase } from '../lib/supabase'
 
 export function useStorage(key, initialValue) {
   const [value, setValue] = useState(() => {
@@ -10,12 +11,23 @@ export function useStorage(key, initialValue) {
     }
   })
 
+  // Skip the first fire (initial mount) — only push on real user-driven changes
+  const isFirst = useRef(true)
+
   useEffect(() => {
     try {
       localStorage.setItem(key, JSON.stringify(value))
     } catch {
       console.warn('localStorage full or unavailable')
     }
+
+    if (isFirst.current) {
+      isFirst.current = false
+      return
+    }
+
+    // Fire-and-forget Supabase sync — pages never wait on this
+    pushToSupabase(key, value)
   }, [key, value])
 
   return [value, setValue]
