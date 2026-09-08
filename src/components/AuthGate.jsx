@@ -32,11 +32,20 @@ export default function AuthGate({ children }) {
       }
     })
 
-    // Handle token refresh & sign-out events
+    // Handle magic-link auto-login, token refresh, and sign-out
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          // Clear local data on sign-out
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Covers magic link redirect landing: Supabase processes the hash
+          // token before React mounts, fires SIGNED_IN — we catch it here
+          setPhase('syncing')
+          await pullFromSupabase(session.user.id)
+          // Clean the access_token fragment from the URL so it doesn't linger
+          if (window.location.hash.includes('access_token')) {
+            window.history.replaceState(null, '', window.location.pathname)
+          }
+          setPhase('ready')
+        } else if (event === 'SIGNED_OUT') {
           ['fitness_body_stats','fitness_workout_logs','fitness_daily_logs']
             .forEach(k => localStorage.removeItem(k))
           setPhase('email')
@@ -53,7 +62,11 @@ export default function AuthGate({ children }) {
     setError('')
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        // Fallback redirect if Supabase sends a magic link instead of OTP
+        emailRedirectTo: `${window.location.origin}${window.location.pathname}`,
+      },
     })
     if (error) setError(error.message)
     else setPhase('otp')
